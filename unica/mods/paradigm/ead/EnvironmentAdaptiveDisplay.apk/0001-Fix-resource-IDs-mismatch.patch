@@ -1,0 +1,193 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: UN1CA <unica@local>
+Date: Fri, 15 May 2026 18:51:11 +0200
+Subject: [PATCH] Retarget framework EAD resource IDs
+
+---
+ .../android/sead/EadFlickerController.smali  |  8 ++++----
+ .../samsung/android/sead/EadLuxController.smali |  8 ++++----
+ .../sead/EnvironmentAdaptiveDisplayService.smali | 22 +++++++++++-----------
+ 3 files changed, 19 insertions(+), 19 deletions(-)
+
+diff --git a/smali/com/samsung/android/sead/EadFlickerController.smali b/smali/com/samsung/android/sead/EadFlickerController.smali
+--- a/smali/com/samsung/android/sead/EadFlickerController.smali
++++ b/smali/com/samsung/android/sead/EadFlickerController.smali
+@@ -862,7 +862,7 @@
+ 
+     move-result-object v0
+ 
+-    const v1, 0x1070056
++    const v1, 0x107005d
+ 
+     invoke-virtual {v0, v1}, Landroid/content/res/Resources;->getIntArray(I)[I
+ 
+@@ -875,7 +875,7 @@
+ 
+     move-result-object v0
+ 
+-    const v1, 0x107005a
++    const v1, 0x1070061
+ 
+     invoke-virtual {v0, v1}, Landroid/content/res/Resources;->getIntArray(I)[I
+ 
+@@ -888,7 +888,7 @@
+ 
+     move-result-object v0
+ 
+-    const v1, 0x1070058
++    const v1, 0x107005f
+ 
+     invoke-virtual {v0, v1}, Landroid/content/res/Resources;->getIntArray(I)[I
+ 
+@@ -901,7 +901,7 @@
+ 
+     move-result-object v0
+ 
+-    const v1, 0x107005c
++    const v1, 0x1070063
+ 
+     invoke-virtual {v0, v1}, Landroid/content/res/Resources;->getIntArray(I)[I
+ 
+diff --git a/smali/com/samsung/android/sead/EadLuxController.smali b/smali/com/samsung/android/sead/EadLuxController.smali
+--- a/smali/com/samsung/android/sead/EadLuxController.smali
++++ b/smali/com/samsung/android/sead/EadLuxController.smali
+@@ -1172,7 +1172,7 @@
+ 
+     move-result-object v0
+ 
+-    const v1, 0x1070055
++    const v1, 0x107005c
+ 
+     invoke-virtual {v0, v1}, Landroid/content/res/Resources;->getIntArray(I)[I
+ 
+@@ -1185,7 +1185,7 @@
+ 
+     move-result-object v0
+ 
+-    const v1, 0x1070059
++    const v1, 0x1070060
+ 
+     invoke-virtual {v0, v1}, Landroid/content/res/Resources;->getIntArray(I)[I
+ 
+@@ -1198,7 +1198,7 @@
+ 
+     move-result-object v0
+ 
+-    const v1, 0x1070057
++    const v1, 0x107005e
+ 
+     invoke-virtual {v0, v1}, Landroid/content/res/Resources;->getIntArray(I)[I
+ 
+@@ -1211,7 +1211,7 @@
+ 
+     move-result-object v0
+ 
+-    const v1, 0x107005b
++    const v1, 0x1070062
+ 
+     invoke-virtual {v0, v1}, Landroid/content/res/Resources;->getIntArray(I)[I
+ 
+diff --git a/smali/com/samsung/android/sead/EnvironmentAdaptiveDisplayService.smali b/smali/com/samsung/android/sead/EnvironmentAdaptiveDisplayService.smali
+--- a/smali/com/samsung/android/sead/EnvironmentAdaptiveDisplayService.smali
++++ b/smali/com/samsung/android/sead/EnvironmentAdaptiveDisplayService.smali
+@@ -1202,7 +1202,7 @@
+ 
+     move-result-object v0
+ 
+-    const v1, 0x1070047
++    const v1, 0x107004a
+ 
+     invoke-virtual {v0, v1}, Landroid/content/res/Resources;->getIntArray(I)[I
+ 
+@@ -3352,7 +3352,7 @@
+ 
+     move-result-object v0
+ 
+-    const v1, 0x107005d
++    const v1, 0x1070064
+ 
+     invoke-virtual {v0, v1}, Landroid/content/res/Resources;->getIntArray(I)[I
+ 
+@@ -3371,7 +3371,7 @@
+ 
+     move-result-object v0
+ 
+-    const v1, 0x107005e
++    const v1, 0x1070065
+ 
+     invoke-virtual {v0, v1}, Landroid/content/res/Resources;->getIntArray(I)[I
+ 
+@@ -3392,7 +3392,7 @@
+ 
+     move-result-object v1
+ 
+-    const v2, 0x1070063
++    const v2, 0x107006a
+ 
+     invoke-virtual {v1, v2}, Landroid/content/res/Resources;->getIntArray(I)[I
+ 
+@@ -3409,7 +3409,7 @@
+ 
+     move-result-object v1
+ 
+-    const v2, 0x1070064
++    const v2, 0x107006b
+ 
+     invoke-virtual {v1, v2}, Landroid/content/res/Resources;->getIntArray(I)[I
+ 
+@@ -3426,7 +3426,7 @@
+ 
+     move-result-object v1
+ 
+-    const v2, 0x107005f
++    const v2, 0x1070066
+ 
+     invoke-virtual {v1, v2}, Landroid/content/res/Resources;->getStringArray(I)[Ljava/lang/String;
+ 
+@@ -3447,7 +3447,7 @@
+ 
+     move-result-object v1
+ 
+-    const v2, 0x1070060
++    const v2, 0x1070067
+ 
+     invoke-virtual {v1, v2}, Landroid/content/res/Resources;->getStringArray(I)[Ljava/lang/String;
+ 
+@@ -3473,7 +3473,7 @@
+ 
+     move-result-object v1
+ 
+-    const v2, 0x1070061
++    const v2, 0x1070068
+ 
+     invoke-virtual {v1, v2}, Landroid/content/res/Resources;->getStringArray(I)[Ljava/lang/String;
+ 
+@@ -3494,7 +3494,7 @@
+ 
+     move-result-object v1
+ 
+-    const v2, 0x1070062
++    const v2, 0x1070069
+ 
+     invoke-virtual {v1, v2}, Landroid/content/res/Resources;->getStringArray(I)[Ljava/lang/String;
+ 
+@@ -3514,7 +3514,7 @@
+ 
+     move-result-object v0
+ 
+-    const v1, 0x107006e
++    const v1, 0x1070075
+ 
+     invoke-virtual {v0, v1}, Landroid/content/res/Resources;->getStringArray(I)[Ljava/lang/String;
+ 
+@@ -3529,7 +3529,7 @@
+ 
+     move-result-object v0
+ 
+-    const v1, 0x107004b
++    const v1, 0x107004e
+ 
+     invoke-virtual {v0, v1}, Landroid/content/res/Resources;->getStringArray(I)[Ljava/lang/String;
+ 
+-- 
+2.51.0
