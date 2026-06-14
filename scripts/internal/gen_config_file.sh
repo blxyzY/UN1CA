@@ -351,6 +351,9 @@ fi
 #     It can be checked in the following ways:
 #       - `configLux` value in the `com.samsung.android.hardware.display.RefreshRateConfig` class inside `framework.jar`
 #
+#   [SOURCE/TARGET]_LCD_SUPPORT_MDNIE_BLUE_FILTER
+#     Boolean which describes whether the device supports mDNIe-based blue light filter.
+#
 #   [SOURCE/TARGET]_LCD_SUPPORT_MDNIE_HW
 #     Boolean which describes whether the device supports hardware mDNIe.
 #     It can be checked in the following ways:
@@ -578,6 +581,8 @@ fi
     GET_BUILD_VAR "TARGET_LCD_CONFIG_SEAMLESS_BRT" "none"
     GET_BUILD_VAR "SOURCE_LCD_CONFIG_SEAMLESS_LUX" "none"
     GET_BUILD_VAR "TARGET_LCD_CONFIG_SEAMLESS_LUX" "none"
+    GET_BUILD_VAR "SOURCE_LCD_SUPPORT_MDNIE_BLUE_FILTER"
+    GET_BUILD_VAR "TARGET_LCD_SUPPORT_MDNIE_BLUE_FILTER"
     GET_BUILD_VAR "SOURCE_LCD_SUPPORT_MDNIE_HW"
     GET_BUILD_VAR "TARGET_LCD_SUPPORT_MDNIE_HW"
     GET_BUILD_VAR "SOURCE_RIL_FEATURES" "none"
