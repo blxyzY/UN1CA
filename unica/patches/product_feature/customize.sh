@@ -643,6 +643,27 @@ if [[ "$SOURCE_LCD_CONFIG_HFR_SUPPORTED_REFRESH_RATE_NS" != "$TARGET_LCD_CONFIG_
     fi
 fi
 
+# SEC_PRODUCT_FEATURE_LCD_SUPPORT_MDNIE_BLUE_FILTER
+if $SOURCE_LCD_SUPPORT_MDNIE_BLUE_FILTER; then
+    if ! $TARGET_LCD_SUPPORT_MDNIE_BLUE_FILTER; then
+        ADD_TO_WORK_DIR "gta9pxxx" "system" "system/priv-app/BlueLightFilter/BlueLightFilter.apk" 0 0 644 "u:object_r:system_file:s0"
+        APPLY_PATCH "system" "system/priv-app/SecSettings/SecSettings.apk" "$MODPATH/mdnie/blf/SecSettings.apk/0001-Add-SystemUI-based-BLF.patch"
+        APPLY_PATCH "system_ext" "priv-app/SystemUI/SystemUI.apk" "$MODPATH/mdnie/blf/SystemUI.apk/0001-Add-SystemUI-based-BLF.patch"
+        if [[ "$(GET_FINGERPRINT_SENSOR_TYPE "$TARGET_FINGERPRINT_CONFIG_SENSOR")" == "optical" ]]; then
+            APPLY_PATCH "system_ext" "priv-app/SystemUI/SystemUI.apk" "$MODPATH/mdnie/blf_optical_fod/SystemUI.apk/0001-Add-SystemUI-based-BLF.patch"
+        elif [[ "$(GET_FINGERPRINT_SENSOR_TYPE "$TARGET_FINGERPRINT_CONFIG_SENSOR")" == "side" ]]; then
+            APPLY_PATCH "system_ext" "priv-app/SystemUI/SystemUI.apk" "$MODPATH/mdnie/blf_side_fp/SystemUI.apk/0001-Add-SystemUI-based-BLF.patch"
+        elif [[ "$(GET_FINGERPRINT_SENSOR_TYPE "$TARGET_FINGERPRINT_CONFIG_SENSOR")" == "ultrasonic" ]]; then
+            ABORT "TARGET_LCD_SUPPORT_MDNIE_BLUE_FILTER is not supported on targets with an ultrasonic fingerprint sensor"
+        fi
+    fi
+else
+    if $TARGET_LCD_SUPPORT_MDNIE_BLUE_FILTER; then
+        # TODO handle this condition
+        LOG_MISSING_PATCHES "SOURCE_LCD_SUPPORT_MDNIE_BLUE_FILTER" "TARGET_LCD_SUPPORT_MDNIE_BLUE_FILTER"
+    fi
+fi
+
 # SEC_PRODUCT_FEATURE_LCD_SUPPORT_MDNIE_HW
 # SEC_PRODUCT_FEATURE_LCD_CONFIG_COLOR_WEAKNESS_SOLUTION
 if $SOURCE_LCD_SUPPORT_MDNIE_HW && [[ "$SOURCE_LCD_CONFIG_COLOR_WEAKNESS_SOLUTION" != "0" ]]; then
