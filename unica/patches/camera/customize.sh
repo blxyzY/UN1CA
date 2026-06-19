@@ -95,22 +95,28 @@ elif ! grep -q "SUPPORT_SINGLE_TAKE_HIGHLIGHT_VIDEOS.*true" "$FW_DIR/$SOURCE_FIR
 fi
 
 # SEC_PRODUCT_FEATURE_CAMERA_SINGLETAKE_SOLUTIONS
-if ! grep -q "ENABLE_SINGLE_TAKE_LITE.*true" "$WORK_DIR/system/system/cameradata/singletake/service-feature.xml" 2>/dev/null && \
-        ! grep -q "SUPPORT_SMART_CROP.*false" "$WORK_DIR/system/system/cameradata/singletake/service-feature.xml" 2>/dev/null; then
-    if [ -d "$FW_DIR/$SOURCE_FIRMWARE_PATH/vendor/etc/singletake/SmartCrop" ]; then
-        if [ ! -d "$WORK_DIR/vendor/etc/singletake/SmartCrop" ] || \
-                [ "$TARGET_PLATFORM_SDK_VERSION" -lt "$SOURCE_PLATFORM_SDK_VERSION" ]; then
-            ADD_TO_WORK_DIR "$SOURCE_FIRMWARE" "vendor" \
-                "etc/singletake/SmartCrop/SmartCrop.tflite" 0 0 644 "u:object_r:vendor_configs_file:s0"
+if [ -f "$WORK_DIR/system/system/cameradata/singletake/service-feature.xml" ]; then
+    if ! grep -q "ENABLE_SINGLE_TAKE_LITE.*true" "$WORK_DIR/system/system/cameradata/singletake/service-feature.xml" 2>/dev/null && \
+            ! grep -q "SUPPORT_SMART_CROP.*false" "$WORK_DIR/system/system/cameradata/singletake/service-feature.xml" 2>/dev/null; then
+        if [ -d "$FW_DIR/$SOURCE_FIRMWARE_PATH/vendor/etc/singletake/SmartCrop" ]; then
+            if [ ! -d "$WORK_DIR/vendor/etc/singletake/SmartCrop" ] || \
+                    [ "$TARGET_PLATFORM_SDK_VERSION" -lt "$SOURCE_PLATFORM_SDK_VERSION" ]; then
+                ADD_TO_WORK_DIR "$SOURCE_FIRMWARE" "vendor" \
+                    "etc/singletake/SmartCrop/SmartCrop.tflite" 0 0 644 "u:object_r:vendor_configs_file:s0"
+            fi
+        else
+            # TODO handle this condition
+            # shellcheck disable=SC2034
+            SOURCE_SUPPORT_SMART_CROP=false
+            # shellcheck disable=SC2034
+            TARGET_SUPPORT_SMART_CROP=true
+            LOG_MISSING_PATCHES "SOURCE_SUPPORT_SMART_CROP" "TARGET_SUPPORT_SMART_CROP"
+            unset SOURCE_SUPPORT_SMART_CROP TARGET_SUPPORT_SMART_CROP
         fi
     else
-        # TODO handle this condition
-        # shellcheck disable=SC2034
-        SOURCE_SUPPORT_SMART_CROP=false
-        # shellcheck disable=SC2034
-        TARGET_SUPPORT_SMART_CROP=true
-        LOG_MISSING_PATCHES "SOURCE_SUPPORT_SMART_CROP" "TARGET_SUPPORT_SMART_CROP"
-        unset SOURCE_SUPPORT_SMART_CROP TARGET_SUPPORT_SMART_CROP
+        if [ -d "$WORK_DIR/vendor/etc/singletake/SmartCrop" ]; then
+            DELETE_FROM_WORK_DIR "vendor" "etc/singletake/SmartCrop"
+        fi
     fi
 else
     if [ -d "$WORK_DIR/vendor/etc/singletake/SmartCrop" ]; then
