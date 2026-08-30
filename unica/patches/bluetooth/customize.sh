@@ -199,6 +199,40 @@ else
     fi
 fi
 
+# SEC_PRODUCT_FEATURE_BLUETOOTH_SUPPORT_A2DP_OFFLOAD
+if $SOURCE_BLUETOOTH_SUPPORT_A2DP_OFFLOAD; then
+    if ! $TARGET_BLUETOOTH_SUPPORT_A2DP_OFFLOAD; then
+        DECODE_APK_IN_APEX "$TMP_DIR/unknown/apex_payload/app/Bluetooth@BP2A.250605.031.A3/Bluetooth.apk"
+        LOG "- Applying \"Disable SUPPORT_A2DP_OFFLOAD support\" to apex_payload/app/Bluetooth@BP2A.250605.031.A3/Bluetooth.apk"
+        APPLY_PATCH "system" "system/app/Bluetooth@BP2A.250605.031.A3/Bluetooth.apk" \
+            "$MODPATH/a2dp_offload/Bluetooth.apk/0001-Disable-SUPPORT_A2DP_OFFLOAD-support.patch" \
+            > /dev/null
+        APPLY_PATCH "system" "system/priv-app/SecSettings/SecSettings.apk" \
+            "$MODPATH/a2dp_offload/SecSettings.apk/0001-Force-disable-A2DP-hardware-offload.patch"
+    fi
+else
+    if $TARGET_BLUETOOTH_SUPPORT_A2DP_OFFLOAD; then
+        # TODO handle this condition
+        LOG_MISSING_PATCHES "SOURCE_BLUETOOTH_SUPPORT_A2DP_OFFLOAD" "TARGET_BLUETOOTH_SUPPORT_A2DP_OFFLOAD"
+    fi
+fi
+
+# SEC_PRODUCT_FEATURE_BLUETOOTH_SUPPORT_A2DP_SBM
+if ! $SOURCE_BLUETOOTH_SUPPORT_A2DP_SBM; then
+    if $TARGET_BLUETOOTH_SUPPORT_A2DP_SBM; then
+        DECODE_APK_IN_APEX "$TMP_DIR/unknown/apex_payload/app/Bluetooth@BP2A.250605.031.A3/Bluetooth.apk"
+        LOG "- Applying \"Enable SUPPORT_A2DP_SBM support\" to apex_payload/app/Bluetooth@BP2A.250605.031.A3/Bluetooth.apk"
+        APPLY_PATCH "system" "system/app/Bluetooth@BP2A.250605.031.A3/Bluetooth.apk" \
+            "$MODPATH/sbm/Bluetooth.apk/0001-Enable-SUPPORT_A2DP_SBM-support.patch" \
+            > /dev/null
+    fi
+else
+    if ! $TARGET_BLUETOOTH_SUPPORT_A2DP_SBM; then
+        # TODO handle this condition
+        LOG_MISSING_PATCHES "SOURCE_BLUETOOTH_SUPPORT_A2DP_SBM" "TARGET_BLUETOOTH_SUPPORT_A2DP_SBM"
+    fi
+fi
+
 # SEC_PRODUCT_FEATURE_BLUETOOTH_SUPPORT_HEAD_SAR_BACKOFF
 if ! $SOURCE_BLUETOOTH_SUPPORT_HEAD_SAR_BACKOFF; then
     if $TARGET_BLUETOOTH_SUPPORT_HEAD_SAR_BACKOFF; then
