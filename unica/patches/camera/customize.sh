@@ -76,23 +76,6 @@ else
     fi
 fi
 
-# Samsung Camera JDM app flavor
-SOURCE_CAMERA_SUPPORT_JDM_APP_FLAVOR="$(test -d "$FW_DIR/$SOURCE_FIRMWARE_PATH/system/system/priv-app/SamSungCamera" && echo "true" || echo "false")"
-TARGET_CAMERA_SUPPORT_JDM_APP_FLAVOR="$(test -d "$FW_DIR/$TARGET_FIRMWARE_PATH/system/system/priv-app/SamSungCamera" && echo "true" || echo "false")"
-if ! $SOURCE_CAMERA_SUPPORT_JDM_APP_FLAVOR; then
-    if $TARGET_CAMERA_SUPPORT_JDM_APP_FLAVOR; then
-        DELETE_FROM_WORK_DIR "system" "system/priv-app/SamsungCamera"
-        ADD_TO_WORK_DIR "$TARGET_FIRMWARE" "system" "system/priv-app/SamSungCamera" 0 0 755 "u:object_r:system_file:s0"
-    fi
-else
-    if $TARGET_CAMERA_SUPPORT_JDM_APP_FLAVOR; then
-        ADD_TO_WORK_DIR "$TARGET_FIRMWARE" "system" "system/priv-app/SamSungCamera" 0 0 755 "u:object_r:system_file:s0"
-    else
-        # TODO handle this condition
-        LOG_MISSING_PATCHES "SOURCE_CAMERA_SUPPORT_JDM_APP_FLAVOR" "TARGET_CAMERA_SUPPORT_JDM_APP_FLAVOR"
-    fi
-fi
-
 # Add/delete Snapchat CameraKit Plugin if SHOOTING_MODE_FUN is (not) available
 if [ -f "$WORK_DIR/system/system/app/FunModeSDK/FunModeSDK.apk" ]; then
     if ! grep -q "SHOOTING_MODE_FUN" "$WORK_DIR/system/system/cameradata/camera-feature.xml" 2> /dev/null; then
@@ -474,7 +457,6 @@ if [ ! "$(find "$WORK_DIR/product/overlay" -maxdepth 1 -type f -name "SystemUI*"
 fi
 
 unset SOURCE_FIRMWARE_PATH TARGET_FIRMWARE_PATH \
-    SOURCE_CAMERA_SUPPORT_JDM_APP_FLAVOR TARGET_CAMERA_SUPPORT_JDM_APP_FLAVOR \
     SOURCE_CAMERA_CONFIG_ACTION_CLASSIFIER TARGET_CAMERA_CONFIG_ACTION_CLASSIFIER \
     SOURCE_CAMERA_CONFIG_GPPM_SOLUTIONS TARGET_CAMERA_CONFIG_GPPM_SOLUTIONS \
     SOURCE_GALLERY_CONFIG_PET_CLUSTER_VERSION TARGET_GALLERY_CONFIG_PET_CLUSTER_VERSION \
