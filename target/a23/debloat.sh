@@ -1,15 +1,10 @@
-# Copyright (c) 2026 Salvo Giangreco
+# Copyright (c) 2026 Noir ZestUI
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 # Debloat list for Galaxy A05s (a05s)
 # - Add entries inside the specific partition containing that file (<PARTITION>_DEBLOAT+="")
 # - DO NOT add the partition name at the start of any entry (eg. "/system/dpolicy_system")
 # - DO NOT add a slash at the start of any entry (eg. "/dpolicy_system")
-
-# ============================================================
-# Debloat list untuk Galaxy A23 (a23)
-# Format UN1CA: path relatif tanpa "/" di awal, tanpa nama partisi
-# ============================================================
 
 # Overlays
 SYSTEM_DEBLOAT+="
