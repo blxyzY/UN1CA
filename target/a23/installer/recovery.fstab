@@ -49,14 +49,14 @@ product	/product	f2fs	ro	wait,avb,logical,first_stage_mount
 /dev/block/bootdevice/by-name/cache       /cache          ext4        defaults                  recoveryonly
 /dev/block/bootdevice/by-name/sec_efs     /efs            ext4        defaults                  recoveryonly
 /dev/block/bootdevice/by-name/sec_efs     /sec_efs        ext4        defaults                  recoveryonly
-
-# FOTA
 /dev/block/bootdevice/by-name/apnhlos     /modem          emmc        defaults                  recoveryonly
 /dev/block/bootdevice/by-name/modem       /mdm            emmc        defaults                  recoveryonly
 /dev/block/bootdevice/by-name/dsp         /dsp            emmc        defaults                  recoveryonly
-
-# Add misc for GOTA
 /dev/block/bootdevice/by-name/misc        /misc           emmc        defaults                  recoveryonly
+
+# Samsung ODE
+/dev/block/bootdevice/by-name/keydata     /keydata        ext4        defaults                  recoveryonly
+/dev/block/bootdevice/by-name/keyrefuge	/keyrefuge	f2fs	defaults	recoveryonly
 
 #Auto-generated code by FOTA Portal
 /dev/block/bootdevice/by-name/dtbo        /dtbo           emmc        default                  recoveryonly
