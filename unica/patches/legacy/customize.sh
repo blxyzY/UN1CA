@@ -219,9 +219,11 @@ if [ "$TARGET_PLATFORM_SDK_VERSION" -lt "35" ]; then
 fi
 
 # Ensure Knox Matrix support
+# - Otherwise check for fkeymaster support in target firmware
 # - Check if target firmware runs on One UI 5.1.1 or above
 TARGET_FIRMWARE_PATH="$(cut -d "/" -f 1 -s <<< "$TARGET_FIRMWARE")_$(cut -d "/" -f 2 -s <<< "$TARGET_FIRMWARE")"
-if [ "$(GET_PROP "$FW_DIR/$TARGET_FIRMWARE_PATH/system/system/build.prop" "ro.build.version.oneui")" -lt "50101" ]; then
+if [ "$(GET_PROP "$FW_DIR/$TARGET_FIRMWARE_PATH/system/system/build.prop" "ro.build.version.oneui")" -lt "50101" ] || \
+        [ ! -f "$FW_DIR/$TARGET_FIRMWARE_PATH/vendor/bin/vendor.samsung.hardware.security.fkeymaster-service" ]; then
     PATCHED=true
     DELETE_FROM_WORK_DIR "system" "system/bin/fabric_crypto"
     DELETE_FROM_WORK_DIR "system" "system/etc/init/fabric_crypto.rc"
