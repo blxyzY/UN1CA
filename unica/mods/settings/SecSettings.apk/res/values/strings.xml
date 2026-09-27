@@ -122,4 +122,5 @@
     <string name="unica_updates_title">UN1CA Updates</string>
     <string name="unica_vulkan_summary">This is unstable and might cause issues!</string>
     <string name="unica_vulkan_title">Enable Vulkan renderer</string>
+    <string name="unica_blur_intensity_title">Blur Intensity Scale</string>
 </resources>

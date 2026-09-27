@@ -1,0 +1,101 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: qwertswa <qwertswa@example.com>
+Date: Fri, 26 Sep 2026 00:00:00 +0000
+Subject: [PATCH] Scale live blur radius
+
+---
+ .../systemui/blur/SecQpBlurController.smali  | 76 ++++++++++++++++++-
+ 1 file changed, 74 insertions(+), 2 deletions(-)
+
+diff --git a/smali/com/android/systemui/blur/SecQpBlurController.smali b/smali/com/android/systemui/blur/SecQpBlurController.smali
+index 0000000..0000000 100644
+--- a/smali/com/android/systemui/blur/SecQpBlurController.smali
++++ b/smali/com/android/systemui/blur/SecQpBlurController.smali
+@@ -470,7 +470,9 @@
+ .end method
+ 
+ .method public final getCalculatedFraction()F
+-    .locals 2
++    .locals 3
++
++    move-object v2, p0
+ 
+     iget-object v0, p0, Lcom/android/systemui/blur/SecQpBlurController;->lazyUnlockedScreenOffAnimationController:Ldagger/Lazy;
+ 
+@@ -495,6 +497,10 @@
+ 
+     iget p0, p0, Lcom/android/systemui/blur/SecQpBlurController;->animatedFraction:F
+ 
++    invoke-direct {v2, p0}, Lcom/android/systemui/blur/SecQpBlurController;->unicaScaleBlur(F)F
++
++    move-result p0
++
+     return p0
+ 
+     :cond_1
+@@ -528,11 +534,19 @@
+ 
+     if-nez v0, :cond_2
+ 
++    invoke-direct {v2, v1}, Lcom/android/systemui/blur/SecQpBlurController;->unicaScaleBlur(F)F
++
++    move-result v1
++
+     return v1
+ 
+     :cond_2
+     iget p0, p0, Lcom/android/systemui/blur/SecQpBlurController;->animatedFraction:F
+ 
++    invoke-direct {v2, p0}, Lcom/android/systemui/blur/SecQpBlurController;->unicaScaleBlur(F)F
++
++    move-result p0
++
+     return p0
+ 
+     :cond_3
+@@ -544,9 +558,43 @@
+ 
+     move-result p0
+ 
++    invoke-direct {v2, p0}, Lcom/android/systemui/blur/SecQpBlurController;->unicaScaleBlur(F)F
++
++    move-result p0
++
+     return p0
+ .end method
+ 
++.method private final unicaScaleBlur(F)F
++    .locals 4
++
++    invoke-static {}, Landroid/app/ActivityThread;->currentApplication()Landroid/app/Application;
++
++    move-result-object v0
++
++    invoke-virtual {v0}, Landroid/content/Context;->getContentResolver()Landroid/content/ContentResolver;
++
++    move-result-object v0
++
++    const-string v1, "persist.sys.unica_blur_scale"
++
++    const/16 v2, 0x1e
++
++    invoke-static {v0, v1, v2}, Landroid/provider/Settings$System;->getInt(Landroid/content/ContentResolver;Ljava/lang/String;I)I
++
++    move-result v0
++
++    int-to-float v0, v0
++
++    const/high16 v1, 0x42c80000    # 100.0f
++
++    div-float/2addr v0, v1
++
++    mul-float/2addr p1, v0
++
++    return p1
++.end method
++
+ .method public final makeAnimationAndRun(FFI)V
+     .locals 2
+ 
+-- 
+2.51.1
