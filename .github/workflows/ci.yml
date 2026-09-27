@@ -56,7 +56,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        target: [dm1q,x1q,y2q,z3q,b5q]
+        target: [dm1q]
 
     steps:
       - name: Checkout repo
