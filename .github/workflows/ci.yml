@@ -5,7 +5,7 @@ on:
   pull_request:
   push:
     branches:
-      - 'lapanlima'
+      - 'QPR2'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -43,8 +43,7 @@ jobs:
       - name: Generate CI matrix
         id: generate-matrix
         run: |
-          matrix="$(find target -mindepth 1 -maxdepth 1 -type d -printf '%f\n' \
-            | sort | jq -R -s -c 'split("\n") | map(select(length > 0))')"
+          matrix='["a23"]'
           echo "$matrix"
           echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
 
@@ -52,6 +51,8 @@ jobs:
     name: Build
     needs: [shellcheck, generate-matrix]
     runs-on: ubuntu-24.04
+    permissions:
+      contents: write
 
     strategy:
       fail-fast: false
@@ -73,7 +74,7 @@ jobs:
       - name: Free disk space (2/3)
         uses: jlumbroso/free-disk-space@main
         with:
-          preinstalled-runtimes: true
+          tool-cache: true
 
       - name: Free disk space (3/3)
         uses: rokibhasansagar/slimhub_actions@main
@@ -168,3 +169,59 @@ jobs:
 
           echo "Uploaded successfully! Download link:"
           echo "$RESPONSE" | jq -r '.data.downloadPage'
+
+      - name: Build flashable zip
+        run: |
+          TARGET_FILES_ZIP="$(find "$OUT_DIR" -maxdepth 1 -name "${{ matrix.target }}_*-target_files.zip" | head -n 1)"
+          if [ -z "$TARGET_FILES_ZIP" ] || [ ! -f "$TARGET_FILES_ZIP" ]; then
+            echo "Error: target-files zip not found in $OUT_DIR" >&2
+            exit 1
+          fi
+          ./scripts/build_flashable_zip.sh "$TARGET_FILES_ZIP"
+
+      - name: Upload flashable zip to Pixeldrain
+        if: github.event_name != 'pull_request'
+        env:
+          PIXELDRAIN_API_KEY: ${{ secrets.PIXELDRAIN_API_KEY }}
+        run: |
+          chmod +x ./scripts/upload_pixeldrain.sh
+          FLASHABLE_ZIP="$(find "$OUT_DIR" -maxdepth 1 -name "UN1CA_*.zip" | head -n 1)"
+          if [ -z "$FLASHABLE_ZIP" ] || [ ! -f "$FLASHABLE_ZIP" ]; then
+            echo "Error: Flashable zip not found in $OUT_DIR" >&2
+            exit 1
+          fi
+          echo "Uploading $(basename "$FLASHABLE_ZIP") to Pixeldrain..."
+          LINK="$(./scripts/upload_pixeldrain.sh "$FLASHABLE_ZIP" | head -n 1)"
+          if [ -z "$LINK" ] || [ "$LINK" = "null" ]; then
+            echo "Error: Failed to obtain Pixeldrain download link!" >&2
+            exit 1
+          fi
+          echo "============================================="
+          echo "Pixeldrain Download Link: $LINK"
+          echo "============================================="
+          SHA256="$(sha256sum "$FLASHABLE_ZIP" | cut -d ' ' -f 1)"
+          MD5="$(md5sum "$FLASHABLE_ZIP" | cut -d ' ' -f 1)"
+          {
+            echo "PIXELDRAIN_LINK=$LINK"
+            echo "ZIP_SHA256=$SHA256"
+            echo "ZIP_MD5=$MD5"
+            echo "ZIP_NAME=$(basename "$FLASHABLE_ZIP")"
+          } >> "$GITHUB_ENV"
+          {
+            echo "### UN1CA for ${{ matrix.target }}"
+            echo "- **Download**: [$LINK]($LINK)"
+            echo "- **File**: \`$(basename "$FLASHABLE_ZIP")\`"
+            echo "- **MD5**: \`$MD5\`"
+            echo "- **SHA256**: \`$SHA256\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        if: github.event_name != 'pull_request'
+        with:
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || env.ROM_VERSION }}
+          name: UN1CA ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || env.ROM_VERSION }}
+          body: |
+            ## Download
+            ### ${{ matrix.target }}
+            - [Pixeldrain](${{ env.PIXELDRAIN_LINK }})
