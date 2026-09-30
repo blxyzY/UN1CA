@@ -16,7 +16,9 @@ EVAL "echo \"libhigh_res.arcsoft.so\" >> \"$WORK_DIR/system/system/etc/public.li
 ADD_TO_WORK_DIR "$TARGET_FIRMWARE" "system" "system/lib64/libhumantracking.arcsoft.so" 0 0 644 "u:object_r:system_lib_file:s0"
 ADD_TO_WORK_DIR "$TARGET_FIRMWARE" "system" "system/lib64/libhumantracking_util.camera.samsung.so" 0 0 644 "u:object_r:system_lib_file:s0"
 ADD_TO_WORK_DIR "$TARGET_FIRMWARE" "system" "system/lib64/liblow_light_hdr.arcsoft.so" 0 0 644 "u:object_r:system_lib_file:s0"
-ADD_TO_WORK_DIR "a73xqxx" "system" "system/lib64/libsecimaging_pdk.camera.samsung.so" 0 0 644 "u:object_r:system_lib_file:s0"
+HEX_PATCH "$WORK_DIR/system/system/lib64/libsecimaging_pdk.camera.samsung.so" \
+    "000000006400000046000000000000000b00000001000000070000000000000000000000" \
+    "000000006400000046000000000000000b00000001000000050000000000000000000000"
 ADD_TO_WORK_DIR "$TARGET_FIRMWARE" "system" "system/lib64/libsuperresolution.arcsoft.so" 0 0 644 "u:object_r:system_lib_file:s0"
 EVAL "echo \"libsuperresolution.arcsoft.so\" >> \"$WORK_DIR/system/system/etc/public.libraries-arcsoft.txt\""
 ADD_TO_WORK_DIR "$TARGET_FIRMWARE" "system" "system/lib64/libsuperresolution_wrapper_v2.camera.samsung.so" 0 0 644 "u:object_r:system_lib_file:s0"
@@ -34,3 +36,12 @@ HEX_PATCH "$WORK_DIR/vendor/lib/unihal_main@2.1.so" "01280dd1" "01280de0"
 # Before: [b.ne 0x5099f4]
 # After: [b 0x5099f4]
 HEX_PATCH "$WORK_DIR/vendor/lib64/unihal_main@2.1.so" "a101005468e640b9" "0d00001468e640b9"
+
+# Force disable Snaplite in Shot suggestions
+# Before: [blt #0x1f890]
+# After: [b #0x1f890]
+HEX_PATCH "$WORK_DIR/vendor/lib/libshotsuggestion_engines.so" "0ddb" "0de0"
+
+# Before: [b.lt 0x40dedc]
+# After: [b 0x40dedc]
+HEX_PATCH "$WORK_DIR/vendor/lib64/libshotsuggestion_engines.so" "eb010054" "0f000014"
