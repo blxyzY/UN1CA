@@ -124,4 +124,10 @@
     <string name="unica_vulkan_title">Enable Vulkan renderer</string>
     <string name="unica_blur_intensity_title">Blur Intensity Scale</string>
     <string name="unica_screen_resolution_title">Screen resolution</string>
+    <string name="unica_monitor_loading">Memuat\u2026</string>
+    <string name="unica_ram_monitor_title">RAM Monitor</string>
+    <string name="unica_battery_info_title">Battery Information</string>
+    <string name="unica_cpu_gpu_temp_title">CPU / GPU Temperature</string>
+    <string name="unica_wifi_ping_stabilizer_title">Wi-Fi Ping Stabilizer</string>
+    <string name="unica_wifi_ping_stabilizer_summary">Disable background Wi-Fi scanning to reduce lag. Warning: reduces indoor location accuracy.</string>
 </resources>
