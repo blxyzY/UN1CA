@@ -271,8 +271,6 @@ if [ "$TARGET_PLATFORM_SDK_VERSION" -lt "35" ]; then
     fi
 fi
 
-<<<<<<< HEAD
-=======
 # Ensure IQtiComposer support (pre-API 36)
 # - Disable "ro.product.first_api_level" < 34 check
 if [ "$TARGET_PLATFORM_SDK_VERSION" -lt "36" ]; then
@@ -391,7 +389,6 @@ if [ "$TARGET_PLATFORM_SDK_VERSION" -lt "36" ]; then
     unset KERNEL_VERSION LEGACY_KERNEL
 fi
 
->>>>>>> upstream/sixteen
 # Ensure sbauth support in target firmware
 TARGET_FIRMWARE_PATH="$(cut -d "/" -f 1 -s <<< "$TARGET_FIRMWARE")_$(cut -d "/" -f 2 -s <<< "$TARGET_FIRMWARE")"
 if [ -f "$WORK_DIR/system/system/bin/sbauth" ] && \
