@@ -58,4 +58,8 @@
     <string name="unica_updates_title">UN1CA Updates</string>
     <string name="unica_vulkan_summary">This is unstable and might cause issues!</string>
     <string name="unica_vulkan_title">Enable Vulkan renderer</string>
+    <string name="unica_blur_intensity_title">Blur Intensity Scale</string>
+    <string name="unica_screen_resolution_title">Screen resolution</string>
+    <string name="unica_wifi_ping_stabilizer_title">Wi-Fi Ping Stabilizer</string>
+    <string name="unica_wifi_ping_stabilizer_summary">Disable background Wi-Fi scanning to reduce lag.</string>
 </resources>

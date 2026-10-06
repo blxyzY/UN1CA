@@ -56,4 +56,8 @@
     <string name="unica_updates_title">Pembaruan UN1CA</string>
     <string name="unica_vulkan_summary">Ini tidak stabil dan mungkin menyebabkan masalah!</string>
     <string name="unica_vulkan_title">Aktifkan perender Vulkan</string>
+    <string name="unica_blur_intensity_title">Skala Intensitas Kabur</string>
+    <string name="unica_screen_resolution_title">Resolusi layar</string>
+    <string name="unica_wifi_ping_stabilizer_title">Penstabil Ping Wi-Fi</string>
+    <string name="unica_wifi_ping_stabilizer_summary">Nonaktifkan pemindaian Wi-Fi di latar belakang untuk mengurangi lag.</string>
 </resources>

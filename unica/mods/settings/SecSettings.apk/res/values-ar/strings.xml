@@ -56,4 +56,8 @@
     <string name="unica_updates_title">تحديثات UN1CA</string>
     <string name="unica_vulkan_summary">هذا غير مستقر وقد يسبب مشاكل!</string>
     <string name="unica_vulkan_title">تمكين مُصيِّر Vulkan</string>
+    <string name="unica_blur_intensity_title">مقياس شدة التمويه</string>
+    <string name="unica_screen_resolution_title">دقة الشاشة</string>
+    <string name="unica_wifi_ping_stabilizer_title">مثبِّت اتصال Wi-Fi</string>
+    <string name="unica_wifi_ping_stabilizer_summary">عطّل مسح شبكات Wi-Fi في الخلفية لتقليل التأخير.</string>
 </resources>

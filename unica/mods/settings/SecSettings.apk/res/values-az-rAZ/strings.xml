@@ -56,4 +56,8 @@
     <string name="unica_updates_title">UN1CA Yeniləmələri</string>
     <string name="unica_vulkan_summary">Bu stabil deyil və problemlərə səbəb ola bilər!</string>
     <string name="unica_vulkan_title">Vulkan renderini aktiv et</string>
+    <string name="unica_blur_intensity_title">Escala de intensidad de desenfoque</string>
+    <string name="unica_screen_resolution_title">Resolución de pantalla</string>
+    <string name="unica_wifi_ping_stabilizer_title">Estabilizador de ping Wi-Fi</string>
+    <string name="unica_wifi_ping_stabilizer_summary">Desactiva el escaneo de Wi-Fi en segundo plano para reducir el lag.</string>
 </resources>

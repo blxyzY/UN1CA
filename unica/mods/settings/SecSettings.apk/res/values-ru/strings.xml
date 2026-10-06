@@ -56,4 +56,8 @@
     <string name="unica_updates_title">Обновления UN1CA</string>
     <string name="unica_vulkan_summary">Это нестабильно и может вызвать проблемы!</string>
     <string name="unica_vulkan_title">Включить рендерер Vulkan</string>
+    <string name="unica_blur_intensity_title">Шкала интенсивности размытия</string>
+    <string name="unica_screen_resolution_title">Разрешение экрана</string>
+    <string name="unica_wifi_ping_stabilizer_title">Стабилизатор пинга Wi-Fi</string>
+    <string name="unica_wifi_ping_stabilizer_summary">Отключите фоновое сканирование Wi-Fi, чтобы уменьшить задержки.</string>
 </resources>

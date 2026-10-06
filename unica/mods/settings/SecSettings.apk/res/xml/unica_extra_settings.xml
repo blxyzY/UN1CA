@@ -10,4 +10,8 @@
     <com.samsung.android.settings.widget.SecInsetCategoryPreference />
     <SecSwitchPreference android:title="@string/unica_gphotos_title" android:key="unica_gphotos" settings:controller="io.mesalabs.unica.settings.extra.GooglePhotosPreferenceController" />
     <SecSwitchPreference android:title="@string/unica_games_spoof_title" android:key="unica_games_spoof" settings:controller="io.mesalabs.unica.settings.extra.GamesPropsPreferenceController" />
+    <com.samsung.android.settings.widget.SecInsetCategoryPreference />
+    <SecDropDownPreference android:title="@string/unica_screen_resolution_title" android:key="unica_screen_resolution" android:summary="%s" android:entries="@array/unica_resolution_entries" android:entryValues="@array/unica_resolution_values" android:defaultValue="6" settings:controller="io.mesalabs.unica.settings.extra.ScreenResolutionPreferenceController" />
+    <EditTextPreference android:key="persist.sys.unica_blur_scale" android:title="@string/unica_blur_intensity_title" android:summary="%s" android:inputType="number" android:dialogMessage="Enter a value from 0 to 100" android:defaultValue="30" settings:controller="io.mesalabs.unica.settings.extra.BlurIntensityScalePreferenceController" />
+    <SecSwitchPreference android:title="@string/unica_wifi_ping_stabilizer_title" android:key="wifi_scan_always_enabled" android:summary="@string/unica_wifi_ping_stabilizer_summary" android:defaultValue="false" settings:controller="io.mesalabs.unica.settings.extra.WifiPingStabilizerPreferenceController" />
 </PreferenceScreen>
