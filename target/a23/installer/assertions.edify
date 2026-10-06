@@ -1,0 +1,2 @@
+is_substring("A235FXX", getprop("ro.boot.bootloader")) && verify_no_downgrade(getprop("ro.boot.bootloader"), "A235FXXU1BVK8") && abort("E3003: This package requires either Android 13 or 14 firmware.");
+is_substring("A235MUB", getprop("ro.boot.bootloader")) && verify_no_downgrade(getprop("ro.boot.bootloader"), "A235MUBS1BWA2") && abort("E3003: This package requires either Android 13 or 14 firmware.");
