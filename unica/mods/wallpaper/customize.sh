@@ -49,6 +49,8 @@ ENCODE_MP4()
 
     if $TARGET_COMMON_SUPPORT_DYN_RESOLUTION_CONTROL; then
         RES="1440:-1"
+    elif [[ "$TARGET_CODENAME" == @(a23|a23xq) ]]; then
+        RES="-1:1605"
     fi
 
     LOG "- Encoding $FILE_NAME"
@@ -59,7 +61,7 @@ ENCODE_MP4()
     CMD+=" -pix_fmt yuv420p -crf 18 -g 1"
     CMD+=" -preset veryslow -tune zerolatency"
     CMD+=" -movflags use_metadata_tags -map_metadata 0"
-    CMD+=" -vf \"fps=60,scale=$RES,setsar=1:1\""
+    CMD+=" -vf \"fps=60,scale=$RES,crop=trunc(iw/2)*2:trunc(ih/2)*2,setsar=1:1\""
     CMD+=" -video_track_timescale 360000 -movie_timescale 90000"
     CMD+=" \"$FILE_PATH/temp.mp4\""
 
