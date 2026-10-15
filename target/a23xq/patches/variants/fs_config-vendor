@@ -1,0 +1,10 @@
+ 0 2000 755 capabilities=0x0
+vendor/etc 0 2000 755 capabilities=0x0
+vendor/etc/init 0 2000 755 capabilities=0x0
+vendor/etc/init/init.a23xq.unify.rc 0 0 644 capabilities=0x0
+vendor/firmware 0 2000 755 capabilities=0x0
+vendor/firmware/SM-A236B 0 2000 755 capabilities=0x0
+vendor/firmware/SM-A236B/ipa_fws.b01 0 0 644 capabilities=0x0
+vendor/firmware/SM-A236B/ipa_fws.elf 0 0 644 capabilities=0x0
+vendor/firmware/SM-A236B/ipa_fws.mdt 0 0 644 capabilities=0x0
+vendor/firmware/SM-A236B/wlanmdsp.mbn 0 0 644 capabilities=0x0

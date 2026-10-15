@@ -1,0 +1,9 @@
+/vendor u:object_r:vendor_file:s0
+/vendor/etc u:object_r:vendor_configs_file:s0
+/vendor/etc/init u:object_r:vendor_configs_file:s0
+/vendor/etc/init/init\.a23xq\.unify\.rc u:object_r:vendor_configs_file:s0
+/vendor/firmware/SM-A236B u:object_r:vendor_firmware_file:s0
+/vendor/firmware/SM-A236B/ipa_fws\.b01 u:object_r:vendor_firmware_file:s0
+/vendor/firmware/SM-A236B/ipa_fws\.elf u:object_r:vendor_firmware_file:s0
+/vendor/firmware/SM-A236B/ipa_fws\.mdt u:object_r:vendor_firmware_file:s0
+/vendor/firmware/SM-A236B/wlanmdsp\.mbn u:object_r:vendor_firmware_file:s0
