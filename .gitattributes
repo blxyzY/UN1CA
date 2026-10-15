@@ -29,6 +29,8 @@ unica/mods/prophide/system/bin/rezetprop binary
 unica/mods/rezoss/system_ext/bin/mosey_server binary
 
 # Device-specific prebuilt blobs
+target/a23/patches/variants/vendor/firmware/** binary
+target/a23xq/patches/variants/vendor/firmware/** binary
 target/a52sxq/patches/wpss/vendor/firmware/** binary
 target/a53x/patches/*/vendor/** binary
 target/a73xq/patches/wpss/vendor/firmware/** binary

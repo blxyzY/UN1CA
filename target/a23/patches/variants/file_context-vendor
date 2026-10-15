@@ -1,0 +1,14 @@
+/vendor u:object_r:vendor_file:s0
+/vendor/etc u:object_r:vendor_configs_file:s0
+/vendor/etc/init u:object_r:vendor_configs_file:s0
+/vendor/etc/init/init\.a23\.unify\.rc u:object_r:vendor_configs_file:s0
+/vendor/firmware/SM-A235M u:object_r:vendor_firmware_file:s0
+/vendor/firmware/SM-A235M/ipa_fws\.b01 u:object_r:vendor_firmware_file:s0
+/vendor/firmware/SM-A235M/ipa_fws\.elf u:object_r:vendor_firmware_file:s0
+/vendor/firmware/SM-A235M/ipa_fws\.mdt u:object_r:vendor_firmware_file:s0
+/vendor/firmware/SM-A235M/wlanmdsp\.mbn u:object_r:vendor_firmware_file:s0
+/vendor/firmware/SM-A235N u:object_r:vendor_firmware_file:s0
+/vendor/firmware/SM-A235N/ipa_fws\.b01 u:object_r:vendor_firmware_file:s0
+/vendor/firmware/SM-A235N/ipa_fws\.elf u:object_r:vendor_firmware_file:s0
+/vendor/firmware/SM-A235N/ipa_fws\.mdt u:object_r:vendor_firmware_file:s0
+/vendor/firmware/SM-A235N/wlanmdsp\.mbn u:object_r:vendor_firmware_file:s0
