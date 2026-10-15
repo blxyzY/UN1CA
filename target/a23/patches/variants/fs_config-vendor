@@ -1,0 +1,15 @@
+ 0 2000 755 capabilities=0x0
+vendor/etc 0 2000 755 capabilities=0x0
+vendor/etc/init 0 2000 755 capabilities=0x0
+vendor/etc/init/init.a23.unify.rc 0 0 644 capabilities=0x0
+vendor/firmware 0 2000 755 capabilities=0x0
+vendor/firmware/SM-A235M 0 2000 755 capabilities=0x0
+vendor/firmware/SM-A235M/ipa_fws.b01 0 0 644 capabilities=0x0
+vendor/firmware/SM-A235M/ipa_fws.elf 0 0 644 capabilities=0x0
+vendor/firmware/SM-A235M/ipa_fws.mdt 0 0 644 capabilities=0x0
+vendor/firmware/SM-A235M/wlanmdsp.mbn 0 0 644 capabilities=0x0
+vendor/firmware/SM-A235N 0 2000 755 capabilities=0x0
+vendor/firmware/SM-A235N/ipa_fws.b01 0 0 644 capabilities=0x0
+vendor/firmware/SM-A235N/ipa_fws.elf 0 0 644 capabilities=0x0
+vendor/firmware/SM-A235N/ipa_fws.mdt 0 0 644 capabilities=0x0
+vendor/firmware/SM-A235N/wlanmdsp.mbn 0 0 644 capabilities=0x0
