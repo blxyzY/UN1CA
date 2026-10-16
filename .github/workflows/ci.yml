@@ -1,62 +1,43 @@
-name: CI
+name: Build
 
 on:
   workflow_dispatch:
+    inputs:
+      changelog:
+        description: 'Changelog'
+        required: false
+        default: ''
+        type: string
+      security_patch:
+        description: 'Security patch date (YYYY-MM-DD)'
+        required: true
+        type: string
+
   pull_request:
+
   push:
     branches:
-      - 'sixteen'
+      - 'QPR2'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  shellcheck:
-    name: Shellcheck
-    runs-on: ubuntu-24.04
-
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v7
-
-      - name: Run shellcheck
-        run: |
-          CODE=0
-          while IFS= read -r f; do
-            shellcheck -e SC1090,SC1091 -s bash "$f" || CODE=1
-          done < <(find platform scripts target unica -name "*.sh" -not -name "*ssi.sh" -not -name "config.sh" -not -name "sff.sh")
-          exit $CODE
-
-  generate-matrix:
-    name: Generate matrix
-    needs: shellcheck
-    runs-on: ubuntu-24.04
-
-    outputs:
-      matrix: ${{ steps.generate-matrix.outputs.matrix }}
-
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v7
-
-      - name: Generate CI matrix
-        id: generate-matrix
-        run: |
-          matrix="$(find target -mindepth 1 -maxdepth 1 -type d -printf '%f\n' \
-            | sort | jq -R -s -c 'split("\n") | map(select(length > 0))')"
-          echo "$matrix"
-          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
-
   build:
-    name: Build
-    needs: [shellcheck, generate-matrix]
     runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+
+    env:
+      STATIC_REPO: qwertswa/static_resources
+      MANIFEST_BRANCH: a23
+      PART_SIZE: 1610612736
 
     strategy:
       fail-fast: false
       matrix:
-        target: ${{ fromJSON(needs.generate-matrix.outputs.matrix) }}
+        target: [dm3q]
 
     steps:
       - name: Checkout repo
@@ -86,39 +67,30 @@ jobs:
           DEBIAN_FRONTEND=noninteractive sudo apt install -yq \
             attr ccache clang ffmpeg libbrotli-dev libbz2-dev \
             libgtest-dev libprotobuf-dev libunwind-dev libpcre2-dev \
-            libzstd-dev linux-modules-extra-$(uname -r) lld protobuf-compiler webp
+            libzstd-dev linux-modules-extra-$(uname -r) lld protobuf-compiler webp \
+            build-essential g++-aarch64-linux-gnu gcc-aarch64-linux-gnu python-is-python3 python3 wget
           sudo modprobe erofs f2fs
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
           echo -n "${{ secrets.PLATFORM_KEY_PK8 }}" | base64 --decode > security/unica_platform.pk8
           echo -n "${{ secrets.PLATFORM_KEY_PEM }}" | base64 --decode > security/unica_platform.x509.pem
+          echo -n "${{ secrets.OTA_KEY_PK8 }}" | base64 --decode > security/unica_ota.pk8
+          echo -n "${{ secrets.OTA_KEY_PEM }}" | base64 --decode > security/unica_ota.x509.pem
 
       - name: Set up JDK 17
-        uses: actions/setup-java@v6
+        uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
           java-version: '17'
           cache: 'gradle'
 
-      - name: Generate build config
+      - name: Set up Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        
+      - name: Build dependencies
         run: |
           source ./buildenv.sh ${{ matrix.target }}
-          {
-            echo "DEBUG=$DEBUG"
-            echo "SRC_DIR=$SRC_DIR"
-            echo "OUT_DIR=$OUT_DIR"
-            echo "ODIN_DIR=$ODIN_DIR"
-            echo "FW_DIR=$FW_DIR"
-            echo "TOOLS_DIR=$TOOLS_DIR"
-            echo "APKTOOL_DIR=$APKTOOL_DIR"
-            echo "WORK_DIR=$WORK_DIR"
-            echo "TMP_DIR=$TMP_DIR"
-          } >> "$GITHUB_ENV"
-          sed -e "/Automatically/d" -e "s/\"//g" "$OUT_DIR/config.sh" >> "$GITHUB_ENV"
-          echo "$TOOLS_DIR/bin" >> "$GITHUB_PATH"
-
-      - name: Build dependencies
-        run: ./scripts/build_dependencies.sh
+          ./scripts/build_dependencies.sh
 
       - name: Download stock firmwares
         uses: nick-fields/retry@v4
@@ -126,10 +98,216 @@ jobs:
           timeout_minutes: 60
           max_attempts: 3
           retry_on: error
-          command: ./scripts/download_fw.sh
+          command: source ./buildenv.sh ${{ matrix.target }} && ./scripts/download_fw.sh
 
       - name: Extract stock firmwares
-        run: ./scripts/extract_fw.sh
+        run: |
+          source ./buildenv.sh ${{ matrix.target }}
+          ./scripts/extract_fw.sh
+
+      - name: Add swapspace
+        uses: pierotofy/set-swap-space@v1.0
+        with:
+          swap-size-gb: 12
 
       - name: Build ROM
-        run: ./scripts/make_rom.sh
+        run: source ./buildenv.sh ${{ matrix.target }} && ./scripts/make_rom.sh
+
+      - name: Build flashable zip
+        run: |
+          TARGET_FILES_ZIP="$(find "$OUT_DIR" -maxdepth 1 -name "${{ matrix.target }}_*-target_files.zip" | head -n 1)"
+          if [ -z "$TARGET_FILES_ZIP" ] || [ ! -f "$TARGET_FILES_ZIP" ]; then
+            echo "Error: target-files zip not found in $OUT_DIR" >&2
+            exit 1
+          fi
+          ./scripts/build_flashable_zip.sh "$TARGET_FILES_ZIP"
+
+      - name: Prepare release assets (split flashable zip)
+        if: github.event_name != 'pull_request'
+        run: |
+          set -euo pipefail
+          ZIP="$(find "$OUT_DIR" -maxdepth 1 -name "UN1CA_*.zip" | head -n 1)"
+          if [ -z "$ZIP" ] || [ ! -f "$ZIP" ]; then
+            echo "Error: Flashable zip not found in $OUT_DIR" >&2
+            exit 1
+          fi
+          ZIP_NAME="$(basename "$ZIP")"
+          ZIP_SIZE="$(stat -c %s "$ZIP")"
+          ZIP_SHA256="$(sha256sum "$ZIP" | cut -d ' ' -f 1)"
+          ZIP_MD5="$(md5sum "$ZIP" | cut -d ' ' -f 1)"
+
+          # <zip>.00, <zip>.01, ... (same naming as official UN1CA)
+          split -b "$PART_SIZE" -d -a 2 "$ZIP" "$ZIP."
+          ZIP_PARTS="$(find "$OUT_DIR" -maxdepth 1 -name "${ZIP_NAME}.[0-9][0-9]" | wc -l)"
+          EXPECTED_PARTS=$(( (ZIP_SIZE + PART_SIZE - 1) / PART_SIZE ))
+          if [ "$ZIP_PARTS" -ne "$EXPECTED_PARTS" ]; then
+            echo "Error: expected $EXPECTED_PARTS parts, found $ZIP_PARTS" >&2
+            exit 1
+          fi
+          echo "$ZIP_SHA256  $ZIP_NAME" > "$ZIP.sha256"
+
+          {
+            echo "ZIP_NAME=$ZIP_NAME"
+            echo "ZIP_SIZE=$ZIP_SIZE"
+            echo "ZIP_SHA256=$ZIP_SHA256"
+            echo "ZIP_MD5=$ZIP_MD5"
+            echo "ZIP_PARTS=$ZIP_PARTS"
+            echo "RELEASE_TAG=${ROM_VERSION%%-*}"
+          } >> "$GITHUB_ENV"
+
+          echo "Split $ZIP_NAME ($ZIP_SIZE bytes) into $ZIP_PARTS parts"
+
+      # gh ikut terhapus oleh step "Free disk space", jadi dipasang ulang di sini.
+      - name: Install GitHub CLI
+        if: github.event_name != 'pull_request'
+        run: |
+          set -euo pipefail
+          if ! command -v gh >/dev/null 2>&1; then
+            VER=2.63.2
+            curl -fsSL "https://github.com/cli/cli/releases/download/v${VER}/gh_${VER}_linux_amd64.tar.gz" \
+              | sudo tar -xz -C /usr/local --strip-components=1
+          fi
+          gh --version
+
+      - name: Upload to GitHub Release (static_resources)
+        if: github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ secrets.STATIC_RESOURCES_TOKEN }}
+        run: |
+          set -euo pipefail
+          TAG="$RELEASE_TAG"
+
+          if ! gh release view "$TAG" --repo "$STATIC_REPO" >/dev/null 2>&1; then
+            TARGET=()
+            if gh api "repos/$STATIC_REPO/branches/$MANIFEST_BRANCH" >/dev/null 2>&1; then
+              TARGET=(--target "$MANIFEST_BRANCH")
+            fi
+            NOTES="Each ROM zip is split into parts (.00, .01, ...). The UN1CA Updates app downloads and joins them automatically.
+
+          To install manually, join the parts first:
+
+              cat UN1CA_<version>_<device>-sign.zip.* > UN1CA_<version>_<device>-sign.zip
+
+          The SHA-256 of every zip is in the matching .sha256 file."
+            gh release create "$TAG" --repo "$STATIC_REPO" "${TARGET[@]}" \
+              --title "UN1CA $TAG" --notes "$NOTES" \
+              || gh release view "$TAG" --repo "$STATIC_REPO" >/dev/null
+          fi
+
+          for f in "$OUT_DIR/$ZIP_NAME".[0-9][0-9] "$OUT_DIR/$ZIP_NAME.sha256"; do
+            ok=0
+            for attempt in 1 2 3; do
+              if gh release upload "$TAG" "$f" --repo "$STATIC_REPO" --clobber; then
+                ok=1
+                break
+              fi
+              echo "Upload of $(basename "$f") failed (attempt $attempt/3)" >&2
+              sleep 15
+            done
+            if [ "$ok" -ne 1 ]; then
+              echo "Error: could not upload $(basename "$f")" >&2
+              exit 1
+            fi
+          done
+
+          gh release view "$TAG" --repo "$STATIC_REPO" --json assets \
+            -q '.assets[] | "\(.name) \(.size)"' > "$RUNNER_TEMP/assets.txt"
+          for i in $(seq 0 $((ZIP_PARTS - 1))); do
+            name="$(printf '%s.%02d' "$ZIP_NAME" "$i")"
+            want="$(stat -c %s "$OUT_DIR/$name")"
+            have="$(awk -v n="$name" '$1 == n { print $2 }' "$RUNNER_TEMP/assets.txt")"
+            if [ "$have" != "$want" ]; then
+              echo "Error: $name on release has size '${have:-missing}', expected $want" >&2
+              exit 1
+            fi
+          done
+
+          BASE="https://github.com/$STATIC_REPO/releases/download/$TAG"
+          {
+            echo "### UN1CA"
+            echo "- **Release**: [$TAG](https://github.com/$STATIC_REPO/releases/tag/$TAG)"
+            echo "- **File**: \`$ZIP_NAME\` ($ZIP_PARTS parts)"
+            echo "- **MD5**: \`$ZIP_MD5\`"
+            echo "- **SHA256**: \`$ZIP_SHA256\`"
+            echo "- **First part**: $BASE/$ZIP_NAME.00"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Update manifest in static_resources
+        if: github.event_name != 'pull_request'
+        env:
+          GH_PAT: ${{ secrets.STATIC_RESOURCES_TOKEN }}
+          CHANGELOG_INPUT: ${{ inputs.changelog }}
+          SECURITY_PATCH_INPUT: ${{ inputs.security_patch }}
+        run: |
+          set -euo pipefail
+          git clone "https://x-access-token:${GH_PAT}@github.com/${STATIC_REPO}.git" sr
+          cd sr
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          # Both matrix jobs write the same manifest.json, so always start from the latest
+          # remote state and retry if the push is rejected.
+          for attempt in 1 2 3 4 5 6; do
+            if git fetch origin "$MANIFEST_BRANCH" 2>/dev/null; then
+              git checkout -q -B "$MANIFEST_BRANCH" "origin/$MANIFEST_BRANCH"
+            else
+              git checkout -q -B "$MANIFEST_BRANCH"
+            fi
+            mkdir -p updates
+            python3 - <<'PY'
+          import json, math, os
+          e = os.environ
+          p = "updates/manifest.json"
+          data = json.load(open(p)) if os.path.exists(p) else {"response": []}
+          size = int(e["ZIP_SIZE"])
+          part = int(e["PART_SIZE"])
+          base = "https://github.com/%s/releases/download/%s/%s" % (
+              e["STATIC_REPO"], e["RELEASE_TAG"], e["ZIP_NAME"])
+          entry = {
+              "datetime": int(e["ROM_BUILD_TIMESTAMP"]),
+              "device": e["TARGET_CODENAME"],
+              "filename": e["ZIP_NAME"],
+              "id": e["ZIP_SHA256"],
+              "patch": e["SECURITY_PATCH_INPUT"],
+              "size": size,
+              "urls": ["%s.%02d" % (base, i) for i in range(math.ceil(size / part))],
+              "version": e["ROM_VERSION"],
+              "incremental": 0,
+          }
+          if not any(x["id"] == entry["id"] for x in data["response"]):
+              data["response"].append(entry)
+          json.dump(data, open(p, "w"), separators=(",", ":"))
+          PY
+            if [ -n "$CHANGELOG_INPUT" ]; then
+              {
+                echo "UN1CA ${ROM_VERSION}"
+                echo
+                printf '%s\n' "$CHANGELOG_INPUT" | sed 's/ \/ /\n/g'
+              } > "updates/${ROM_VERSION}.txt"
+            else
+              if [ ! -f "updates/${ROM_VERSION}.txt" ]; then
+                echo "UN1CA ${ROM_VERSION}" \
+                  > "updates/${ROM_VERSION}.txt"
+              fi
+            fi
+
+            echo "============================================="
+            echo "Changelog:"
+            echo "============================================="
+            cat "updates/${ROM_VERSION}.txt"
+            echo "============================================="
+
+            git add updates
+            if git diff --cached --quiet; then
+              echo "Manifest already up to date"
+              exit 0
+            fi
+            git commit -q -m "Add ${ROM_VERSION} (${TARGET_CODENAME})"
+            if git push origin "$MANIFEST_BRANCH"; then
+              exit 0
+            fi
+            echo "Push rejected (attempt $attempt/6), retrying..." >&2
+            sleep $(( (RANDOM % 10) + 5 ))
+          done
+          echo "Error: could not push manifest after 6 attempts" >&2
+          exit 1
