@@ -62,4 +62,5 @@
     <string name="unica_screen_resolution_title">Screen resolution</string>
     <string name="unica_wifi_ping_stabilizer_title">Wi-Fi Ping Stabilizer</string>
     <string name="unica_wifi_ping_stabilizer_summary">Disable background Wi-Fi scanning to reduce lag.</string>
+    <string name="unica_performance_mode_title">Performance Mode</string>
 </resources>

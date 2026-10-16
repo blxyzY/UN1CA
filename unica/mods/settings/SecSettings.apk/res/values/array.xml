@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-        <string-array name="unica_resolution_entries">
+    <string-array name="unica_resolution_entries">
         <item>HD+ (720p)</item>
         <item>Medium (900p)</item>
         <item>FHD+ (1080p)</item>
@@ -9,5 +9,13 @@
         <item>4</item>
         <item>5</item>
         <item>6</item>
+    </string-array>
+    <string-array name="unica_perf_mode_entries">
+        <item>Balance</item>
+        <item>Performance</item>
+    </string-array>
+    <string-array name="unica_perf_mode_values">
+        <item>balance</item>
+        <item>performance</item>
     </string-array>
 </resources>
