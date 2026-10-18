@@ -23,12 +23,6 @@ system/lib64/vendor.samsung.hardware.security.hdcp.keyprovisioning@1.0.so
 SYSTEM_DEBLOAT+="
 system/priv-app/GameDriver-SM8450
 "
-# Bixby Debload
-SYSTEM_DEBLOAT+="
-system/app/BixbyWakeup
-system/priv-app/Bixby
-system/priv-app/BixbyVisionFramework3.5
-"
 
 # LinkToWindows Debload
 SYSTEM_DEBLOAT+="
@@ -55,7 +49,6 @@ system/etc/default-permissions/default-permissions-com.google.android.euicc.xml
 # Usesles feature Debload
 SYSTEM_DEBLOAT+="
 system/priv-app/Moments
-system/priv-app/BixbyInterpreter
 system/app/KidsHome_Installer
 system/app/ParentalCare
 "
