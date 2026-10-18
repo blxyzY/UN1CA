@@ -29,10 +29,19 @@ LOG_MISSING_PATCHES()
 # Return 0 kalau patch bisa diterapkan bersih (atau belum bisa dicek).
 CHECK_PATCH()
 {
-    local DIR="$APKTOOL_DIR/$1/$2"
+    local REL="$2"
+    local DIR
+
+    # Untuk partisi "system", direktori apktool tidak memakai awalan "system/"
+    # (contoh: apktool/system/framework/framework.jar)
+    [[ "$1" == "system" ]] && REL="${REL#system/}"
+    DIR="$APKTOOL_DIR/$1/$REL"
 
     # Belum di-decode apktool, tidak bisa dicek sekarang
-    [ -d "$DIR" ] || return 0
+    if [ ! -d "$DIR" ]; then
+        LOGW "Cannot dry-run patch, not decoded yet: $DIR"
+        return 0
+    fi
 
     LC_ALL=C patch -p1 -d "$DIR" -N --forward -l --dry-run < "$3" > /dev/null 2>&1
 }
