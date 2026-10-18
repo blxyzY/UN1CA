@@ -33,6 +33,11 @@ jobs:
       STATIC_REPO: qwertswa/static_resources
       MANIFEST_BRANCH: a23
       PART_SIZE: 1610612736
+      TF_TAG: target-files
+      TF_KEEP: 3
+      INC_SOURCES: 2
+      # Gambar banner untuk release notes (commit file ini ke repo; kosongkan/hapus file untuk menonaktifkan)
+      RELEASE_IMAGE: .github/release-banner.png
 
     strategy:
       fail-fast: false
@@ -117,6 +122,21 @@ jobs:
       - name: Build ROM
         run: ./scripts/make_rom.sh
 
+      # Pembuatan zip hanya butuh target_files zip, tools, dan key. Firmware stock, work_dir, dsb.
+      # sudah tidak dipakai lagi, dan menghapusnya membebaskan puluhan GB supaya 7z/signapk
+      # (yang butuh beberapa salinan zip 5 GB sekaligus) tidak kehabisan disk.
+      - name: Free disk space before packaging
+        run: |
+          set -euo pipefail
+          TARGET_FILES_ZIP="$(find "$OUT_DIR" -maxdepth 1 -name "${{ matrix.target }}_*-target_files.zip" | head -n 1)"
+          if [ -z "$TARGET_FILES_ZIP" ] || [ ! -f "$TARGET_FILES_ZIP" ]; then
+            echo "Error: target-files zip not found in $OUT_DIR" >&2
+            exit 1
+          fi
+          df -h / | tail -n 1
+          rm -rf "${FW_DIR:?}" "${ODIN_DIR:?}" "${WORK_DIR:?}" "${APKTOOL_DIR:?}" "${TMP_DIR:?}"
+          df -h / | tail -n 1
+
       - name: Build flashable zip
         run: |
           TARGET_FILES_ZIP="$(find "$OUT_DIR" -maxdepth 1 -name "${{ matrix.target }}_*-target_files.zip" | head -n 1)"
@@ -126,42 +146,8 @@ jobs:
           fi
           ./scripts/build_flashable_zip.sh "$TARGET_FILES_ZIP"
 
-      - name: Prepare release assets (split flashable zip)
-        if: github.event_name != 'pull_request'
-        run: |
-          set -euo pipefail
-          ZIP="$(find "$OUT_DIR" -maxdepth 1 -name "UN1CA_*.zip" | head -n 1)"
-          if [ -z "$ZIP" ] || [ ! -f "$ZIP" ]; then
-            echo "Error: Flashable zip not found in $OUT_DIR" >&2
-            exit 1
-          fi
-          ZIP_NAME="$(basename "$ZIP")"
-          ZIP_SIZE="$(stat -c %s "$ZIP")"
-          ZIP_SHA256="$(sha256sum "$ZIP" | cut -d ' ' -f 1)"
-          ZIP_MD5="$(md5sum "$ZIP" | cut -d ' ' -f 1)"
-
-          # <zip>.00, <zip>.01, ... (same naming as official UN1CA)
-          split -b "$PART_SIZE" -d -a 2 "$ZIP" "$ZIP."
-          ZIP_PARTS="$(find "$OUT_DIR" -maxdepth 1 -name "${ZIP_NAME}.[0-9][0-9]" | wc -l)"
-          EXPECTED_PARTS=$(( (ZIP_SIZE + PART_SIZE - 1) / PART_SIZE ))
-          if [ "$ZIP_PARTS" -ne "$EXPECTED_PARTS" ]; then
-            echo "Error: expected $EXPECTED_PARTS parts, found $ZIP_PARTS" >&2
-            exit 1
-          fi
-          echo "$ZIP_SHA256  $ZIP_NAME" > "$ZIP.sha256"
-
-          {
-            echo "ZIP_NAME=$ZIP_NAME"
-            echo "ZIP_SIZE=$ZIP_SIZE"
-            echo "ZIP_SHA256=$ZIP_SHA256"
-            echo "ZIP_MD5=$ZIP_MD5"
-            echo "ZIP_PARTS=$ZIP_PARTS"
-            echo "RELEASE_TAG=${ROM_VERSION%%-*}"
-          } >> "$GITHUB_ENV"
-
-          echo "Split $ZIP_NAME ($ZIP_SIZE bytes) into $ZIP_PARTS parts"
-
-      # gh ikut terhapus oleh step "Free disk space", jadi dipasang ulang di sini.
+      # gh ikut terhapus oleh step "Free disk space", jadi dipasang ulang di sini
+      # (dipindah ke atas karena sekarang dipakai untuk mengambil target_files lama).
       - name: Install GitHub CLI
         if: github.event_name != 'pull_request'
         run: |
@@ -172,6 +158,94 @@ jobs:
               | sudo tar -xz -C /usr/local --strip-components=1
           fi
           gh --version
+
+      # Buat zip INCREMENTAL dari target_files rilis-rilis sebelumnya (disimpan di tag $TF_TAG).
+      # Kalau belum ada target_files lama (rilis pertama setelah perubahan ini), step ini dilewati
+      # dan hanya zip full yang dirilis.
+      - name: Build incremental zips
+        if: github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ secrets.STATIC_RESOURCES_TOKEN }}
+        run: |
+          set -euo pipefail
+          TARGET_FILES_ZIP="$(find "$OUT_DIR" -maxdepth 1 -name "${{ matrix.target }}_*-target_files.zip" | head -n 1)"
+          CUR_NAME="$(basename "$TARGET_FILES_ZIP")"
+          PREV_DIR="$RUNNER_TEMP/prev"
+          mkdir -p "$PREV_DIR"
+
+          echo "Looking for release '$TF_TAG' in $STATIC_REPO"
+          if ! VIEW_OUT="$(gh release view "$TF_TAG" --repo "$STATIC_REPO" --json tagName -q .tagName 2>&1)"; then
+            echo "::warning::gh release view '$TF_TAG' failed: $VIEW_OUT"
+            echo "Releases visible with this token:"
+            gh release list --repo "$STATIC_REPO" --limit 20 || true
+            echo "Skipping incremental zips"
+            exit 0
+          fi
+          echo "Found release: $VIEW_OUT"
+
+          # "<createdAt> <asset name>" -> newest first -> strip the .NN part suffix -> unique base names
+          gh release view "$TF_TAG" --repo "$STATIC_REPO" --json assets \
+            -q '.assets[] | "\(.createdAt) \(.name)"' \
+            | grep -E " ${{ matrix.target }}_.*-target_files\.zip\.[0-9]{2}$" \
+            | sort -r \
+            | awk '{ sub(/\.[0-9][0-9]$/, "", $2); if (!seen[$2]++) print $2 }' \
+            | grep -vxF "$CUR_NAME" \
+            | head -n "$INC_SOURCES" > "$RUNNER_TEMP/bases.txt" || true
+
+          if [ ! -s "$RUNNER_TEMP/bases.txt" ]; then
+            echo "No previous target-files for ${{ matrix.target }}, skipping incremental zips"
+            exit 0
+          fi
+
+          while IFS= read -r base; do
+            echo "::group::Incremental from $base"
+            gh release download "$TF_TAG" --repo "$STATIC_REPO" --pattern "$base.[0-9][0-9]" --dir "$PREV_DIR"
+            cat "$PREV_DIR/$base".[0-9][0-9] > "$PREV_DIR/$base"
+            rm -f "$PREV_DIR/$base".[0-9][0-9]
+            if ! ./scripts/build_flashable_zip.sh -i "$PREV_DIR/$base" "$TARGET_FILES_ZIP"; then
+              echo "::warning::Could not build incremental zip from $base"
+            fi
+            rm -f "$PREV_DIR/$base"
+            echo "::endgroup::"
+          done < "$RUNNER_TEMP/bases.txt"
+
+      - name: Prepare release assets (split flashable zips)
+        if: github.event_name != 'pull_request'
+        run: |
+          set -euo pipefail
+          LIST="$OUT_DIR/release_list.txt"
+          : > "$LIST"
+
+          shopt -s nullglob
+          ZIPS=("$OUT_DIR"/UN1CA_*.zip)
+          if [ "${#ZIPS[@]}" -eq 0 ]; then
+            echo "Error: Flashable zip not found in $OUT_DIR" >&2
+            exit 1
+          fi
+
+          for ZIP in "${ZIPS[@]}"; do
+            ZIP_NAME="$(basename "$ZIP")"
+            ZIP_SIZE="$(stat -c %s "$ZIP")"
+            ZIP_SHA256="$(sha256sum "$ZIP" | cut -d ' ' -f 1)"
+            # 0 for full zips, source build timestamp for incremental zips
+            ZIP_INC="$(unzip -p "$ZIP" build_info.txt | grep '^incremental=' | cut -d '=' -f 2 -s)"
+
+            # <zip>.00, <zip>.01, ... (same naming as official UN1CA)
+            split -b "$PART_SIZE" -d -a 2 "$ZIP" "$ZIP."
+            ZIP_PARTS="$(find "$OUT_DIR" -maxdepth 1 -name "${ZIP_NAME}.[0-9][0-9]" | wc -l)"
+            EXPECTED_PARTS=$(( (ZIP_SIZE + PART_SIZE - 1) / PART_SIZE ))
+            if [ "$ZIP_PARTS" -ne "$EXPECTED_PARTS" ]; then
+              echo "Error: $ZIP_NAME expected $EXPECTED_PARTS parts, found $ZIP_PARTS" >&2
+              exit 1
+            fi
+            echo "$ZIP_SHA256  $ZIP_NAME" > "$ZIP.sha256"
+
+            echo "$ZIP_NAME|$ZIP_SIZE|$ZIP_SHA256|${ZIP_INC:-0}|$ZIP_PARTS" >> "$LIST"
+            echo "Split $ZIP_NAME ($ZIP_SIZE bytes, incremental=${ZIP_INC:-0}) into $ZIP_PARTS parts"
+          done
+
+          echo "RELEASE_LIST=$LIST" >> "$GITHUB_ENV"
+          echo "RELEASE_TAG=${ROM_VERSION%%-*}" >> "$GITHUB_ENV"
 
       - name: Upload to GitHub Release (static_resources)
         if: github.event_name != 'pull_request'
@@ -186,7 +260,14 @@ jobs:
             if gh api "repos/$STATIC_REPO/branches/$MANIFEST_BRANCH" >/dev/null 2>&1; then
               TARGET=(--target "$MANIFEST_BRANCH")
             fi
-            NOTES="Each ROM zip is split into parts (.00, .01, ...). The UN1CA Updates app downloads and joins them automatically.
+            NOTES=""
+            if [ -f "$RELEASE_IMAGE" ]; then
+              NOTES="![UN1CA](https://github.com/$STATIC_REPO/releases/download/$TAG/$(basename "$RELEASE_IMAGE"))"$'\n\n'
+            else
+              echo "::warning::$RELEASE_IMAGE not found, release will have no image"
+            fi
+            NOTES+="Each ROM zip is split into parts (.00, .01, ...). The UN1CA Updates app downloads and joins them automatically.
+          Zips with INCREMENTAL in the name only update from the build whose timestamp is in the file name.
 
           To install manually, join the parts first:
 
@@ -198,8 +279,8 @@ jobs:
               || gh release view "$TAG" --repo "$STATIC_REPO" >/dev/null
           fi
 
-          for f in "$OUT_DIR/$ZIP_NAME".[0-9][0-9] "$OUT_DIR/$ZIP_NAME.sha256"; do
-            ok=0
+          upload() {
+            local f="$1" ok=0 attempt
             for attempt in 1 2 3; do
               if gh release upload "$TAG" "$f" --repo "$STATIC_REPO" --clobber; then
                 ok=1
@@ -212,29 +293,88 @@ jobs:
               echo "Error: could not upload $(basename "$f")" >&2
               exit 1
             fi
-          done
+          }
+
+          if [ -f "$RELEASE_IMAGE" ]; then
+            upload "$RELEASE_IMAGE"
+          fi
+
+          while IFS='|' read -r ZIP_NAME ZIP_SIZE ZIP_SHA256 ZIP_INC ZIP_PARTS; do
+            for f in "$OUT_DIR/$ZIP_NAME".[0-9][0-9] "$OUT_DIR/$ZIP_NAME.sha256"; do
+              upload "$f"
+            done
+          done < "$RELEASE_LIST"
 
           gh release view "$TAG" --repo "$STATIC_REPO" --json assets \
             -q '.assets[] | "\(.name) \(.size)"' > "$RUNNER_TEMP/assets.txt"
-          for i in $(seq 0 $((ZIP_PARTS - 1))); do
-            name="$(printf '%s.%02d' "$ZIP_NAME" "$i")"
-            want="$(stat -c %s "$OUT_DIR/$name")"
-            have="$(awk -v n="$name" '$1 == n { print $2 }' "$RUNNER_TEMP/assets.txt")"
-            if [ "$have" != "$want" ]; then
-              echo "Error: $name on release has size '${have:-missing}', expected $want" >&2
+
+          BASE="https://github.com/$STATIC_REPO/releases/download/$TAG"
+          echo "### UN1CA" >> "$GITHUB_STEP_SUMMARY"
+          while IFS='|' read -r ZIP_NAME ZIP_SIZE ZIP_SHA256 ZIP_INC ZIP_PARTS; do
+            for i in $(seq 0 $((ZIP_PARTS - 1))); do
+              name="$(printf '%s.%02d' "$ZIP_NAME" "$i")"
+              want="$(stat -c %s "$OUT_DIR/$name")"
+              have="$(awk -v n="$name" '$1 == n { print $2 }' "$RUNNER_TEMP/assets.txt")"
+              if [ "$have" != "$want" ]; then
+                echo "Error: $name on release has size '${have:-missing}', expected $want" >&2
+                exit 1
+              fi
+            done
+            {
+              echo "- \`$ZIP_NAME\` ($ZIP_PARTS parts, incremental=$ZIP_INC)"
+              echo "  - **SHA256**: \`$ZIP_SHA256\`"
+              echo "  - **First part**: $BASE/$ZIP_NAME.00"
+            } >> "$GITHUB_STEP_SUMMARY"
+          done < "$RELEASE_LIST"
+
+      # Simpan target_files build ini supaya rilis berikutnya bisa membuat zip INCREMENTAL darinya.
+      # Hanya build yang persis sama dengan yang terpasang di HP yang bisa dipakai sebagai sumber,
+      # jadi file ini harus asli dari build yang dirilis (membangun ulang commit lama tidak cukup).
+      - name: Store target-files for future incremental zips
+        if: github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ secrets.STATIC_RESOURCES_TOKEN }}
+        run: |
+          set -euo pipefail
+          TARGET_FILES_ZIP="$(find "$OUT_DIR" -maxdepth 1 -name "${{ matrix.target }}_*-target_files.zip" | head -n 1)"
+          CUR_NAME="$(basename "$TARGET_FILES_ZIP")"
+
+          if ! gh release view "$TF_TAG" --repo "$STATIC_REPO" >/dev/null 2>&1; then
+            gh release create "$TF_TAG" --repo "$STATIC_REPO" \
+              --title "target-files (internal)" \
+              --notes "Source files for building incremental zips. Not meant to be flashed." \
+              || gh release view "$TF_TAG" --repo "$STATIC_REPO" >/dev/null
+          fi
+
+          split -b "$PART_SIZE" -d -a 2 "$TARGET_FILES_ZIP" "$TARGET_FILES_ZIP."
+          for f in "$TARGET_FILES_ZIP".[0-9][0-9]; do
+            ok=0
+            for attempt in 1 2 3; do
+              if gh release upload "$TF_TAG" "$f" --repo "$STATIC_REPO" --clobber; then
+                ok=1
+                break
+              fi
+              echo "Upload of $(basename "$f") failed (attempt $attempt/3)" >&2
+              sleep 15
+            done
+            if [ "$ok" -ne 1 ]; then
+              echo "Error: could not upload $(basename "$f")" >&2
               exit 1
             fi
           done
 
-          BASE="https://github.com/$STATIC_REPO/releases/download/$TAG"
-          {
-            echo "### UN1CA"
-            echo "- **Release**: [$TAG](https://github.com/$STATIC_REPO/releases/tag/$TAG)"
-            echo "- **File**: \`$ZIP_NAME\` ($ZIP_PARTS parts)"
-            echo "- **MD5**: \`$ZIP_MD5\`"
-            echo "- **SHA256**: \`$ZIP_SHA256\`"
-            echo "- **First part**: $BASE/$ZIP_NAME.00"
-          } >> "$GITHUB_STEP_SUMMARY"
+          # Keep only the newest $TF_KEEP builds of this target; delete older parts.
+          gh release view "$TF_TAG" --repo "$STATIC_REPO" --json assets \
+            -q '.assets[] | "\(.createdAt) \(.name)"' \
+            | grep -E " ${{ matrix.target }}_.*-target_files\.zip\.[0-9]{2}$" \
+            | sort -r \
+            | awk -v keep="$TF_KEEP" '{ n=$2; sub(/\.[0-9][0-9]$/, "", n); if (!seen[n]++) order[++c]=n; names[n]=names[n] " " $2 }
+                   END { for (i = keep + 1; i <= c; i++) print names[order[i]] }' \
+            | tr ' ' '\n' | grep -v '^$' > "$RUNNER_TEMP/prune.txt" || true
+          while IFS= read -r a; do
+            echo "Pruning old target-files asset $a"
+            gh release delete-asset "$TF_TAG" "$a" --repo "$STATIC_REPO" --yes || true
+          done < "$RUNNER_TEMP/prune.txt"
 
       - name: Update manifest in static_resources
         if: github.event_name != 'pull_request'
@@ -263,23 +403,29 @@ jobs:
           e = os.environ
           p = "updates/manifest.json"
           data = json.load(open(p)) if os.path.exists(p) else {"response": []}
-          size = int(e["ZIP_SIZE"])
           part = int(e["PART_SIZE"])
-          base = "https://github.com/%s/releases/download/%s/%s" % (
-              e["STATIC_REPO"], e["RELEASE_TAG"], e["ZIP_NAME"])
-          entry = {
-              "datetime": int(e["ROM_BUILD_TIMESTAMP"]),
-              "device": e["TARGET_CODENAME"],
-              "filename": e["ZIP_NAME"],
-              "id": e["ZIP_SHA256"],
-              "patch": e["SECURITY_PATCH_INPUT"],
-              "size": size,
-              "urls": ["%s.%02d" % (base, i) for i in range(math.ceil(size / part))],
-              "version": e["ROM_VERSION"],
-              "incremental": 0,
-          }
-          if not any(x["id"] == entry["id"] for x in data["response"]):
-              data["response"].append(entry)
+          for line in open(e["RELEASE_LIST"]):
+              line = line.rstrip("\n")
+              if not line:
+                  continue
+              name, size, sha, inc, _parts = line.split("|")
+              size = int(size)
+              base = "https://github.com/%s/releases/download/%s/%s" % (
+                  e["STATIC_REPO"], e["RELEASE_TAG"], name)
+              entry = {
+                  "datetime": int(e["ROM_BUILD_TIMESTAMP"]),
+                  "device": e["TARGET_CODENAME"],
+                  "filename": name,
+                  "id": sha,
+                  "patch": e["SECURITY_PATCH_INPUT"],
+                  "size": size,
+                  "urls": ["%s.%02d" % (base, i) for i in range(math.ceil(size / part))],
+                  "version": e["ROM_VERSION"],
+                  # 0 = full zip; otherwise the build timestamp this zip updates FROM
+                  "incremental": int(inc),
+              }
+              if not any(x["id"] == entry["id"] for x in data["response"]):
+                  data["response"].append(entry)
           json.dump(data, open(p, "w"), separators=(",", ":"))
           PY
             if [ -n "$CHANGELOG_INPUT" ]; then
