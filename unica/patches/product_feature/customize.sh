@@ -66,6 +66,18 @@ FIND_SMALI()
 
     echo "$4/$3"
 }
+
+# APPLY_PATCH yang melewati patch (dengan peringatan) kalau tidak cocok,
+# supaya tidak ada patch setengah jadi dan build tidak gagal.
+# $1 = partisi, $2 = path apk/jar, $3 = file patch
+APPLY_PATCH_SAFE()
+{
+    if CHECK_PATCH "$1" "$2" "$3"; then
+        APPLY_PATCH "$1" "$2" "$3"
+    else
+        LOGW "Patch doesn't apply cleanly, skipping: $(basename "$3")"
+    fi
+}
 # ]
 
 # SEC_PRODUCT_FEATURE_BUILD_MAINLINE_API_LEVEL
@@ -518,7 +530,7 @@ if [[ "$SOURCE_LCD_CONFIG_SEAMLESS_BRT" != "$TARGET_LCD_CONFIG_SEAMLESS_BRT" ]] 
         [[ "$SOURCE_LCD_CONFIG_SEAMLESS_LUX" != "$TARGET_LCD_CONFIG_SEAMLESS_LUX" ]]; then
     if [[ "$SOURCE_LCD_CONFIG_SEAMLESS_BRT" != "none" ]] && [[ "$SOURCE_LCD_CONFIG_SEAMLESS_LUX" != "none" ]] && \
             [[ "$TARGET_LCD_CONFIG_SEAMLESS_BRT" == "none" ]] && [[ "$TARGET_LCD_CONFIG_SEAMLESS_LUX" == "none" ]]; then
-        APPLY_PATCH "system" "system/framework/framework.jar" \
+        APPLY_PATCH_SAFE "system" "system/framework/framework.jar" \
             "$MODPATH/hfr/framework.jar/0001-Remove-brightness-threshold-values.patch"
     elif [[ "$SOURCE_LCD_CONFIG_SEAMLESS_BRT" != "none" ]] && [[ "$SOURCE_LCD_CONFIG_SEAMLESS_LUX" != "none" ]] && \
             [[ "$TARGET_LCD_CONFIG_SEAMLESS_BRT" != "none" ]] && [[ "$TARGET_LCD_CONFIG_SEAMLESS_LUX" != "none" ]]; then
@@ -1267,4 +1279,4 @@ elif $SOURCE_WLAN_SUPPORT_WIFI_TO_CELLULAR && ! $TARGET_WLAN_SUPPORT_WIFI_TO_CEL
 fi
 
 unset TARGET_FIRMWARE_PATH
-unset -f GET_FINGERPRINT_SENSOR_TYPE LOG_MISSING_PATCHES CHECK_PATCH FIND_SMALI
+unset -f GET_FINGERPRINT_SENSOR_TYPE LOG_MISSING_PATCHES CHECK_PATCH FIND_SMALI APPLY_PATCH_SAFE
