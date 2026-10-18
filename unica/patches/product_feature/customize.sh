@@ -45,6 +45,27 @@ CHECK_PATCH()
 
     LC_ALL=C patch -p1 -d "$DIR" -N --forward -l --dry-run < "$3" > /dev/null 2>&1
 }
+
+# Cari folder smali*/ yang benar untuk sebuah class, karena nomor smali_classesN
+# berbeda antar versi firmware. Output: "smali_classesN/path/Class.smali"
+# $1 = partisi, $2 = path apk/jar, $3 = path smali (tanpa smali*/), $4 = default
+FIND_SMALI()
+{
+    local REL="$2"
+    local BASE D
+
+    [[ "$1" == "system" ]] && REL="${REL#system/}"
+    BASE="$APKTOOL_DIR/$1/$REL"
+
+    for D in "$BASE"/smali*; do
+        if [ -f "$D/$3" ]; then
+            echo "$(basename "$D")/$3"
+            return 0
+        fi
+    done
+
+    echo "$4/$3"
+}
 # ]
 
 # SEC_PRODUCT_FEATURE_BUILD_MAINLINE_API_LEVEL
@@ -483,7 +504,7 @@ if [[ "$SOURCE_LCD_CONFIG_CONTROL_AUTO_BRIGHTNESS" != "$TARGET_LCD_CONFIG_CONTRO
         "$SOURCE_LCD_CONFIG_CONTROL_AUTO_BRIGHTNESS" \
         "$TARGET_LCD_CONFIG_CONTROL_AUTO_BRIGHTNESS"
     SMALI_PATCH "system" "system/priv-app/SecSettings/SecSettings.apk" \
-        "smali_classes4/com/samsung/android/settings/Rune.smali" "replace" \
+        "$(FIND_SMALI "system" "system/priv-app/SecSettings/SecSettings.apk" "com/samsung/android/settings/Rune.smali" "smali_classes4")" "replace" \
         "<clinit>()V" \
         "$SOURCE_LCD_CONFIG_CONTROL_AUTO_BRIGHTNESS" \
         "$TARGET_LCD_CONFIG_CONTROL_AUTO_BRIGHTNESS"
@@ -542,7 +563,7 @@ if [[ "$SOURCE_LCD_CONFIG_HFR_DEFAULT_REFRESH_RATE" != "$TARGET_LCD_CONFIG_HFR_D
         "HFR_DEFAULT_REFRESH_RATE: $SOURCE_LCD_CONFIG_HFR_DEFAULT_REFRESH_RATE" \
         "HFR_DEFAULT_REFRESH_RATE: $TARGET_LCD_CONFIG_HFR_DEFAULT_REFRESH_RATE"
     SMALI_PATCH "system" "system/priv-app/SecSettings/SecSettings.apk" \
-        "smali_classes4/com/samsung/android/settings/display/SecDisplayUtils.smali" "replace" \
+        "$(FIND_SMALI "system" "system/priv-app/SecSettings/SecSettings.apk" "com/samsung/android/settings/display/SecDisplayUtils.smali" "smali_classes4")" "replace" \
         "getHighRefreshRateDefaultValue(Landroid/content/Context;I)I" \
         "$SOURCE_LCD_CONFIG_HFR_DEFAULT_REFRESH_RATE" \
         "$TARGET_LCD_CONFIG_HFR_DEFAULT_REFRESH_RATE"
@@ -596,12 +617,12 @@ if [[ "$SOURCE_LCD_CONFIG_HFR_MODE" != "$TARGET_LCD_CONFIG_HFR_MODE" ]]; then
         "$SOURCE_LCD_CONFIG_HFR_MODE" \
         "$TARGET_LCD_CONFIG_HFR_MODE"
     SMALI_PATCH "system" "system/priv-app/SecSettings/SecSettings.apk" \
-        "smali_classes4/com/samsung/android/settings/display/SecDisplayUtils.smali" "replace" \
+        "$(FIND_SMALI "system" "system/priv-app/SecSettings/SecSettings.apk" "com/samsung/android/settings/display/SecDisplayUtils.smali" "smali_classes4")" "replace" \
         "getHighRefreshRateSeamlessType(I)I" \
         "$SOURCE_LCD_CONFIG_HFR_MODE" \
         "$TARGET_LCD_CONFIG_HFR_MODE"
     SMALI_PATCH "system" "system/priv-app/SecSettings/SecSettings.apk" \
-        "smali_classes4/com/samsung/android/settings/display/SecDisplayUtils.smali" "replace" \
+        "$(FIND_SMALI "system" "system/priv-app/SecSettings/SecSettings.apk" "com/samsung/android/settings/display/SecDisplayUtils.smali" "smali_classes4")" "replace" \
         "isSupportMaxHS60RefreshRate(I)Z" \
         "$SOURCE_LCD_CONFIG_HFR_MODE" \
         "$TARGET_LCD_CONFIG_HFR_MODE"
@@ -1246,4 +1267,4 @@ elif $SOURCE_WLAN_SUPPORT_WIFI_TO_CELLULAR && ! $TARGET_WLAN_SUPPORT_WIFI_TO_CEL
 fi
 
 unset TARGET_FIRMWARE_PATH
-unset -f GET_FINGERPRINT_SENSOR_TYPE LOG_MISSING_PATCHES CHECK_PATCH
+unset -f GET_FINGERPRINT_SENSOR_TYPE LOG_MISSING_PATCHES CHECK_PATCH FIND_SMALI
