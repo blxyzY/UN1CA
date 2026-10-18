@@ -18,6 +18,20 @@ SMALI_PATCH "system" "system/framework/framework.jar" \
     '    invoke-virtual {p0, p3}, Landroid/app/Application;->attach(Landroid/content/Context;)V\n\n    invoke-static {p3}, Lio/mesalabs/unica/SamsungPropsHooks;->init(Landroid/content/Context;)V' \
     > /dev/null
 
+# Scale the background blur radius system-wide (Blur Intensity Scale)
+# The original method is renamed and wrapped by a new one that scales the radius via BlurHooks,
+# so no register of the original body has to be known
+DECODE_APK "system" "system/framework/framework.jar"
+BLUR_SMALI="$(find "$APKTOOL_DIR/system/framework/framework.jar" -type f -path '*/android/view/SurfaceControl$Transaction.smali' | head -n 1)"
+BLUR_SMALI="${BLUR_SMALI#"$APKTOOL_DIR/system/framework/framework.jar/"}"
+SMALI_PATCH "system" "system/framework/framework.jar" \
+    "$BLUR_SMALI" "replace" \
+    'setBackgroundBlurRadius(Landroid/view/SurfaceControl;I)Landroid/view/SurfaceControl$Transaction;' \
+    'setBackgroundBlurRadius(Landroid/view/SurfaceControl;I)Landroid/view/SurfaceControl$Transaction;' \
+    '.method public setBackgroundBlurRadius(Landroid/view/SurfaceControl;I)Landroid/view/SurfaceControl$Transaction;\n    .locals 1\n\n    invoke-static {p2}, Lio/mesalabs/unica/BlurHooks;->scale(I)I\n\n    move-result p2\n\n    invoke-virtual {p0, p1, p2}, Landroid/view/SurfaceControl$Transaction;->unicaSetBackgroundBlurRadius(Landroid/view/SurfaceControl;I)Landroid/view/SurfaceControl$Transaction;\n\n    move-result-object p0\n\n    return-object p0\n.end method\n\n.method public unicaSetBackgroundBlurRadius(Landroid/view/SurfaceControl;I)Landroid/view/SurfaceControl$Transaction;' \
+    > /dev/null
+unset BLUR_SMALI
+
 DECODE_APK "system" "system/priv-app/SecSettings/SecSettings.apk"
 
 # Disable stock OTA references

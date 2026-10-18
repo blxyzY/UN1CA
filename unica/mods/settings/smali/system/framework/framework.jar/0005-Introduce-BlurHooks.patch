@@ -1,0 +1,74 @@
+From f52da1be9d8fefe3ca9611988269dd63d202246e Mon Sep 17 00:00:00 2001
+From: qwertswa <qwertswa@example.com>
+Date: Sat, 17 Oct 2026 11:12:01 +0700
+Subject: [PATCH] Introduce BlurHooks
+
+---
+ .../io/mesalabs/unica/BlurHooks.smali         | 55 +++++++++++++++++++
+ 1 file changed, 55 insertions(+)
+ create mode 100644 smali_classes6/io/mesalabs/unica/BlurHooks.smali
+
+diff --git a/smali_classes6/io/mesalabs/unica/BlurHooks.smali b/smali_classes6/io/mesalabs/unica/BlurHooks.smali
+new file mode 100644
+index 0000000..f1cb5de
+--- /dev/null
++++ b/smali_classes6/io/mesalabs/unica/BlurHooks.smali
+@@ -0,0 +1,55 @@
++.class public Lio/mesalabs/unica/BlurHooks;
++.super Ljava/lang/Object;
++.source "BlurHooks.java"
++
++
++# static fields
++.field private static final KEY_BLUR_SCALE:Ljava/lang/String; = "persist.sys.unica_blur_scale"
++
++.field private static final DEFAULT_BLUR_SCALE:I = 0x1e
++
++
++# direct methods
++.method public static scale(I)I
++    .locals 2
++
++    if-lez p0, :cond_done
++
++    invoke-static {}, Landroid/app/ActivityThread;->currentPackageName()Ljava/lang/String;
++
++    move-result-object v0
++
++    const-string v1, "com.android.systemui"
++
++    invoke-virtual {v1, v0}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
++
++    move-result v1
++
++    if-nez v1, :cond_done
++
++    const-string v0, "persist.sys.unica_blur_scale"
++
++    const/16 v1, 0x1e
++
++    invoke-static {v0, v1}, Landroid/os/SystemProperties;->getInt(Ljava/lang/String;I)I
++
++    move-result v0
++
++    const/16 v1, 0x64
++
++    if-ge v0, v1, :cond_done
++
++    if-gtz v0, :cond_scale
++
++    const/4 p0, 0x0
++
++    return p0
++
++    :cond_scale
++    mul-int/2addr p0, v0
++
++    div-int/lit8 p0, p0, 0x64
++
++    :cond_done
++    return p0
++.end method
+-- 
+2.43.0
+
