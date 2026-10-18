@@ -8,7 +8,8 @@ GET_FINGERPRINT_SENSOR_TYPE()
     elif [[ "$1" == *"side"* ]]; then
         echo "side"
     else
-        ABORT "Unknown fingerprint sensor type: \"$1\". Aborting"
+        # Jangan ABORT, pemanggil yang memutuskan (skip dengan peringatan)
+        echo "unknown"
     fi
 }
 
@@ -21,6 +22,19 @@ LOG_MISSING_PATCHES()
     else
         ABORT "${MESSAGE}. Aborting"
     fi
+}
+
+# Cek patch dengan --dry-run supaya tidak ada patch yang setengah ter-apply.
+# $1 = partisi, $2 = path file di dalam partisi, $3 = file patch
+# Return 0 kalau patch bisa diterapkan bersih (atau belum bisa dicek).
+CHECK_PATCH()
+{
+    local DIR="$APKTOOL_DIR/$1/$2"
+
+    # Belum di-decode apktool, tidak bisa dicek sekarang
+    [ -d "$DIR" ] || return 0
+
+    LC_ALL=C patch -p1 -d "$DIR" -N --forward -l --dry-run < "$3" > /dev/null 2>&1
 }
 # ]
 
@@ -290,125 +304,148 @@ if [[ "$SOURCE_FINGERPRINT_CONFIG_SENSOR" != "$TARGET_FINGERPRINT_CONFIG_SENSOR"
     SOURCE_FINGERPRINT_SENSOR_TYPE="$(GET_FINGERPRINT_SENSOR_TYPE "$SOURCE_FINGERPRINT_CONFIG_SENSOR")"
     TARGET_FINGERPRINT_SENSOR_TYPE="$(GET_FINGERPRINT_SENSOR_TYPE "$TARGET_FINGERPRINT_CONFIG_SENSOR")"
     if [[ "$SOURCE_FINGERPRINT_SENSOR_TYPE" != "$TARGET_FINGERPRINT_SENSOR_TYPE" ]]; then
-        if [[ "$SOURCE_FINGERPRINT_SENSOR_TYPE" == "optical" ]] && \
+        if [[ "$SOURCE_FINGERPRINT_SENSOR_TYPE" == "unknown" ]] || \
+                [[ "$TARGET_FINGERPRINT_SENSOR_TYPE" == "unknown" ]]; then
+            LOGW "Unknown fingerprint sensor type (source: \"$SOURCE_FINGERPRINT_CONFIG_SENSOR\", target: \"$TARGET_FINGERPRINT_CONFIG_SENSOR\"), skipping fingerprint patches"
+        elif [[ "$SOURCE_FINGERPRINT_SENSOR_TYPE" == "optical" ]] && \
                 [[ "$TARGET_FINGERPRINT_SENSOR_TYPE" == "ultrasonic" ]]; then
             LOG "- Using target ultrasonic fingerprint feature configuration"
         elif [[ "$SOURCE_FINGERPRINT_SENSOR_TYPE" == "ultrasonic" ]]; then
             if [[ "$TARGET_FINGERPRINT_SENSOR_TYPE" == "optical" ]]; then
-                SOURCE_FINGERPRINT_CONFIG_SENSOR="google_touch_display_optical,settings=3"
-
-                if [[ "$TARGET_OS_SINGLE_SYSTEM_IMAGE" == "qssi" ]]; then
-                    ADD_TO_WORK_DIR "r9qxxx" "system" "system/bin/surfaceflinger" 0 2000 755 "u:object_r:surfaceflinger_exec:s0"
-                    ADD_TO_WORK_DIR "r9qxxx" "system" "system/lib/libgui.so" 0 0 644 "u:object_r:system_lib_file:s0"
-                    ADD_TO_WORK_DIR "r9qxxx" "system" "system/lib/libui.so" 0 0 644 "u:object_r:system_lib_file:s0"
-                    ADD_TO_WORK_DIR "r9qxxx" "system" "system/lib64/libgui.so" 0 0 644 "u:object_r:system_lib_file:s0"
-                    ADD_TO_WORK_DIR "r9qxxx" "system" "system/lib64/libui.so" 0 0 644 "u:object_r:system_lib_file:s0"
-                elif [[ "$TARGET_OS_SINGLE_SYSTEM_IMAGE" == "essi" ]]; then
-                    ADD_TO_WORK_DIR "r9sxxx" "system" "system/bin/surfaceflinger" 0 2000 755 "u:object_r:surfaceflinger_exec:s0"
-                    ADD_TO_WORK_DIR "r9sxxx" "system" "system/lib/libgui.so" 0 0 644 "u:object_r:system_lib_file:s0"
-                    ADD_TO_WORK_DIR "r9sxxx" "system" "system/lib/libui.so" 0 0 644 "u:object_r:system_lib_file:s0"
-                    ADD_TO_WORK_DIR "r9sxxx" "system" "system/lib64/libgui.so" 0 0 644 "u:object_r:system_lib_file:s0"
-                    ADD_TO_WORK_DIR "r9sxxx" "system" "system/lib64/libui.so" 0 0 644 "u:object_r:system_lib_file:s0"
+                if ! CHECK_PATCH "system" "system/framework/framework.jar" \
+                        "$MODPATH/fingerprint/optical_fod/framework.jar/0001-Add-optical-FOD-support.patch" || \
+                    ! CHECK_PATCH "system" "system/framework/services.jar" \
+                        "$MODPATH/fingerprint/optical_fod/services.jar/0001-Add-optical-FOD-support.patch" || \
+                    ! CHECK_PATCH "system" "system/priv-app/SecSettings/SecSettings.apk" \
+                        "$MODPATH/fingerprint/optical_fod/SecSettings.apk/0001-Add-optical-FOD-support.patch" || \
+                    ! CHECK_PATCH "system_ext" "priv-app/SystemUI/SystemUI.apk" \
+                        "$MODPATH/fingerprint/optical_fod/SystemUI.apk/0001-Add-optical-FOD-support.patch"; then
+                    LOGW "Optical FOD patches don't apply cleanly to this firmware, skipping"
                 else
-                    ABORT "Unknown SSI: $TARGET_OS_SINGLE_SYSTEM_IMAGE"
-                fi
+                    SOURCE_FINGERPRINT_CONFIG_SENSOR="google_touch_display_optical,settings=3"
 
-                ADD_TO_WORK_DIR "r9qxxx" "system" "system/priv-app/BiometricSetting/BiometricSetting.apk" 0 0 644 "u:object_r:system_file:s0"
+                    if [[ "$TARGET_OS_SINGLE_SYSTEM_IMAGE" == "qssi" ]]; then
+                        ADD_TO_WORK_DIR "r9qxxx" "system" "system/bin/surfaceflinger" 0 2000 755 "u:object_r:surfaceflinger_exec:s0"
+                        ADD_TO_WORK_DIR "r9qxxx" "system" "system/lib/libgui.so" 0 0 644 "u:object_r:system_lib_file:s0"
+                        ADD_TO_WORK_DIR "r9qxxx" "system" "system/lib/libui.so" 0 0 644 "u:object_r:system_lib_file:s0"
+                        ADD_TO_WORK_DIR "r9qxxx" "system" "system/lib64/libgui.so" 0 0 644 "u:object_r:system_lib_file:s0"
+                        ADD_TO_WORK_DIR "r9qxxx" "system" "system/lib64/libui.so" 0 0 644 "u:object_r:system_lib_file:s0"
+                    elif [[ "$TARGET_OS_SINGLE_SYSTEM_IMAGE" == "essi" ]]; then
+                        ADD_TO_WORK_DIR "r9sxxx" "system" "system/bin/surfaceflinger" 0 2000 755 "u:object_r:surfaceflinger_exec:s0"
+                        ADD_TO_WORK_DIR "r9sxxx" "system" "system/lib/libgui.so" 0 0 644 "u:object_r:system_lib_file:s0"
+                        ADD_TO_WORK_DIR "r9sxxx" "system" "system/lib/libui.so" 0 0 644 "u:object_r:system_lib_file:s0"
+                        ADD_TO_WORK_DIR "r9sxxx" "system" "system/lib64/libgui.so" 0 0 644 "u:object_r:system_lib_file:s0"
+                        ADD_TO_WORK_DIR "r9sxxx" "system" "system/lib64/libui.so" 0 0 644 "u:object_r:system_lib_file:s0"
+                    else
+                        ABORT "Unknown SSI: $TARGET_OS_SINGLE_SYSTEM_IMAGE"
+                    fi
 
-                APPLY_PATCH "system" "system/framework/framework.jar" \
-                    "$MODPATH/fingerprint/optical_fod/framework.jar/0001-Add-optical-FOD-support.patch"
-                APPLY_PATCH "system" "system/framework/services.jar" \
-                    "$MODPATH/fingerprint/optical_fod/services.jar/0001-Add-optical-FOD-support.patch"
-                APPLY_PATCH "system" "system/priv-app/SecSettings/SecSettings.apk" \
-                    "$MODPATH/fingerprint/optical_fod/SecSettings.apk/0001-Add-optical-FOD-support.patch"
-                APPLY_PATCH "system_ext" "priv-app/SystemUI/SystemUI.apk" \
-                    "$MODPATH/fingerprint/optical_fod/SystemUI.apk/0001-Add-optical-FOD-support.patch"
+                    ADD_TO_WORK_DIR "r9qxxx" "system" "system/priv-app/BiometricSetting/BiometricSetting.apk" 0 0 644 "u:object_r:system_file:s0"
 
-                if [[ "$TARGET_FINGERPRINT_CONFIG_SENSOR" == *"no_delay_in_screen_off"* ]]; then
-                    APPLY_PATCH "system" "system/priv-app/BiometricSetting/BiometricSetting.apk" \
-                        "$MODPATH/fingerprint/optical_fod/BiometricSetting.apk/0001-Enable-FP_FEATURE_NO_DELAY_IN_SCREEN_OFF.patch"
-                fi
+                    APPLY_PATCH "system" "system/framework/framework.jar" \
+                        "$MODPATH/fingerprint/optical_fod/framework.jar/0001-Add-optical-FOD-support.patch"
+                    APPLY_PATCH "system" "system/framework/services.jar" \
+                        "$MODPATH/fingerprint/optical_fod/services.jar/0001-Add-optical-FOD-support.patch"
+                    APPLY_PATCH "system" "system/priv-app/SecSettings/SecSettings.apk" \
+                        "$MODPATH/fingerprint/optical_fod/SecSettings.apk/0001-Add-optical-FOD-support.patch"
+                    APPLY_PATCH "system_ext" "priv-app/SystemUI/SystemUI.apk" \
+                        "$MODPATH/fingerprint/optical_fod/SystemUI.apk/0001-Add-optical-FOD-support.patch"
 
-                if [[ "$TARGET_FINGERPRINT_CONFIG_SENSOR" == *"transition_effect_on"* ]]; then
-                    SMALI_PATCH "system" "system/framework/framework.jar" \
-                        "smali_classes2/android/hardware/fingerprint/FingerprintManager.smali" "return" \
-                        "semGetTransitionEffectValue()I" \
-                        "1"
-                elif [[ "$TARGET_FINGERPRINT_CONFIG_SENSOR" == *"transition_effect_off"* ]]; then
-                    SMALI_PATCH "system" "system/framework/framework.jar" \
-                        "smali_classes2/android/hardware/fingerprint/FingerprintManager.smali" "return" \
-                        "semGetTransitionEffectValue()I" \
-                        "0"
+                    if [[ "$TARGET_FINGERPRINT_CONFIG_SENSOR" == *"no_delay_in_screen_off"* ]]; then
+                        APPLY_PATCH "system" "system/priv-app/BiometricSetting/BiometricSetting.apk" \
+                            "$MODPATH/fingerprint/optical_fod/BiometricSetting.apk/0001-Enable-FP_FEATURE_NO_DELAY_IN_SCREEN_OFF.patch"
+                    fi
+
+                    if [[ "$TARGET_FINGERPRINT_CONFIG_SENSOR" == *"transition_effect_on"* ]]; then
+                        SMALI_PATCH "system" "system/framework/framework.jar" \
+                            "smali_classes2/android/hardware/fingerprint/FingerprintManager.smali" "return" \
+                            "semGetTransitionEffectValue()I" \
+                            "1"
+                    elif [[ "$TARGET_FINGERPRINT_CONFIG_SENSOR" == *"transition_effect_off"* ]]; then
+                        SMALI_PATCH "system" "system/framework/framework.jar" \
+                            "smali_classes2/android/hardware/fingerprint/FingerprintManager.smali" "return" \
+                            "semGetTransitionEffectValue()I" \
+                            "0"
+                    fi
                 fi
             elif [[ "$TARGET_FINGERPRINT_SENSOR_TYPE" == "side" ]]; then
-                SOURCE_FINGERPRINT_CONFIG_SENSOR="google_touch_side,navi=1"
+                if ! CHECK_PATCH "system" "system/framework/framework.jar" \
+                        "$MODPATH/fingerprint/side_fp/framework.jar/0001-Add-side-fingerprint-sensor-support.patch" || \
+                    ! CHECK_PATCH "system" "system/framework/services.jar" \
+                        "$MODPATH/fingerprint/side_fp/services.jar/0001-Add-side-fingerprint-sensor-support.patch" || \
+                    ! CHECK_PATCH "system" "system/priv-app/SecSettings/SecSettings.apk" \
+                        "$MODPATH/fingerprint/side_fp/SecSettings.apk/0001-Add-side-fingerprint-sensor-support.patch" || \
+                    ! CHECK_PATCH "system_ext" "priv-app/SystemUI/SystemUI.apk" \
+                        "$MODPATH/fingerprint/side_fp/SystemUI.apk/0001-Add-side-fingerprint-sensor-support.patch"; then
+                    LOGW "Side fingerprint patches don't apply cleanly to this firmware, skipping"
+                else
+                    SOURCE_FINGERPRINT_CONFIG_SENSOR="google_touch_side,navi=1"
 
-                ADD_TO_WORK_DIR "b4qxxx" "system" "system/priv-app/BiometricSetting/BiometricSetting.apk" 0 0 644 "u:object_r:system_file:s0"
-                APPLY_PATCH "system" "system/priv-app/BiometricSetting/BiometricSetting.apk" \
-                    "$MODPATH/fingerprint/side_fp/BiometricSetting.apk/0001-Add-FEATURE_FINGERPRINT_JDM_HAL-support.patch"
+                    ADD_TO_WORK_DIR "b4qxxx" "system" "system/priv-app/BiometricSetting/BiometricSetting.apk" 0 0 644 "u:object_r:system_file:s0"
+                    APPLY_PATCH "system" "system/priv-app/BiometricSetting/BiometricSetting.apk" \
+                        "$MODPATH/fingerprint/side_fp/BiometricSetting.apk/0001-Add-FEATURE_FINGERPRINT_JDM_HAL-support.patch"
 
-                APPLY_PATCH "system" "system/framework/framework.jar" \
-                    "$MODPATH/fingerprint/side_fp/framework.jar/0001-Add-side-fingerprint-sensor-support.patch"
-                APPLY_PATCH "system" "system/framework/services.jar" \
-                    "$MODPATH/fingerprint/side_fp/services.jar/0001-Add-side-fingerprint-sensor-support.patch"
-                EVAL "sed -i \"/implements/i .implements Lcom\/android\/server\/biometrics\/sensors\/fingerprint\/SemFpHalLifecycleListener;\" \"$APKTOOL_DIR/system/framework/services.jar/smali/com/android/server/biometrics/sensors/fingerprint/SemFingerprintServiceExtImpl.smali\""
-                APPLY_PATCH "system" "system/priv-app/SecSettings/SecSettings.apk" \
-                    "$MODPATH/fingerprint/side_fp/SecSettings.apk/0001-Add-side-fingerprint-sensor-support.patch"
-                EVAL "sed -i \"s/^\.implements.*/.implements Landroid\/widget\/CompoundButton\$OnCheckedChangeListener;/g\" \"$APKTOOL_DIR/system/priv-app/SecSettings/SecSettings.apk/smali_classes4/com/samsung/android/settings/biometrics/fingerprint/SuwFingerprintUsefulFeature\\\$\\\$ExternalSyntheticLambda1.smali\""
-                SMALI_PATCH "system" "system/priv-app/SecSettings/SecSettings.apk" \
-                    "smali_classes4/com/samsung/android/settings/biometrics/fingerprint/SuwFingerprintUsefulFeature\$\$ExternalSyntheticLambda4.smali" "remove"
-                SMALI_PATCH "system" "system/priv-app/SecSettings/SecSettings.apk" \
-                    "smali_classes4/com/samsung/android/settings/biometrics/fingerprint/SuwFingerprintUsefulFeature\$\$ExternalSyntheticLambda9.smali" "remove"
-                SMALI_PATCH "system" "system/priv-app/SecSettings/SecSettings.apk" \
-                    "smali_classes4/com/samsung/android/settings/biometrics/fingerprint/SuwFingerprintUsefulFeature\$1.smali" "remove"
-                APPLY_PATCH "system_ext" "priv-app/SystemUI/SystemUI.apk" \
-                    "$MODPATH/fingerprint/side_fp/SystemUI.apk/0001-Add-side-fingerprint-sensor-support.patch"
-                EVAL "sed -i \"s/^\.implements.*/.implements Ljava\/util\/function\/Consumer;/g\" \"$APKTOOL_DIR/system_ext/priv-app/SystemUI/SystemUI.apk/smali/com/android/keyguard/KeyguardSecUpdateMonitorImpl\\\$\\\$ExternalSyntheticLambda28.smali\""
-                SMALI_PATCH "system_ext" "priv-app/SystemUI/SystemUI.apk" \
-                    "smali/com/android/keyguard/KeyguardSecUpdateMonitorImpl\$\$ExternalSyntheticLambda24.smali" "remove"
-                SMALI_PATCH "system_ext" "priv-app/SystemUI/SystemUI.apk" \
-                    "smali/com/android/keyguard/KeyguardSecUpdateMonitorImpl\$\$ExternalSyntheticLambda29.smali" "remove"
-                SMALI_PATCH "system_ext" "priv-app/SystemUI/SystemUI.apk" \
-                    "smali/com/android/keyguard/KeyguardSecUpdateMonitorImpl\$\$ExternalSyntheticLambda33.smali" "remove"
-                SMALI_PATCH "system_ext" "priv-app/SystemUI/SystemUI.apk" \
-                    "smali/com/android/keyguard/KeyguardSecUpdateMonitorImpl\$\$ExternalSyntheticLambda40.smali" "remove"
-                SMALI_PATCH "system_ext" "priv-app/SystemUI/SystemUI.apk" \
-                    "smali/com/android/keyguard/KeyguardSecUpdateMonitorImpl\$\$ExternalSyntheticLambda42.smali" "remove"
+                    APPLY_PATCH "system" "system/framework/framework.jar" \
+                        "$MODPATH/fingerprint/side_fp/framework.jar/0001-Add-side-fingerprint-sensor-support.patch"
+                    APPLY_PATCH "system" "system/framework/services.jar" \
+                        "$MODPATH/fingerprint/side_fp/services.jar/0001-Add-side-fingerprint-sensor-support.patch"
+                    EVAL "sed -i \"/implements/i .implements Lcom\/android\/server\/biometrics\/sensors\/fingerprint\/SemFpHalLifecycleListener;\" \"$APKTOOL_DIR/system/framework/services.jar/smali/com/android/server/biometrics/sensors/fingerprint/SemFingerprintServiceExtImpl.smali\""
+                    APPLY_PATCH "system" "system/priv-app/SecSettings/SecSettings.apk" \
+                        "$MODPATH/fingerprint/side_fp/SecSettings.apk/0001-Add-side-fingerprint-sensor-support.patch"
+                    EVAL "sed -i \"s/^\.implements.*/.implements Landroid\/widget\/CompoundButton\$OnCheckedChangeListener;/g\" \"$APKTOOL_DIR/system/priv-app/SecSettings/SecSettings.apk/smali_classes4/com/samsung/android/settings/biometrics/fingerprint/SuwFingerprintUsefulFeature\\\$\\\$ExternalSyntheticLambda1.smali\""
+                    SMALI_PATCH "system" "system/priv-app/SecSettings/SecSettings.apk" \
+                        "smali_classes4/com/samsung/android/settings/biometrics/fingerprint/SuwFingerprintUsefulFeature\$\$ExternalSyntheticLambda4.smali" "remove"
+                    SMALI_PATCH "system" "system/priv-app/SecSettings/SecSettings.apk" \
+                        "smali_classes4/com/samsung/android/settings/biometrics/fingerprint/SuwFingerprintUsefulFeature\$\$ExternalSyntheticLambda9.smali" "remove"
+                    SMALI_PATCH "system" "system/priv-app/SecSettings/SecSettings.apk" \
+                        "smali_classes4/com/samsung/android/settings/biometrics/fingerprint/SuwFingerprintUsefulFeature\$1.smali" "remove"
+                    APPLY_PATCH "system_ext" "priv-app/SystemUI/SystemUI.apk" \
+                        "$MODPATH/fingerprint/side_fp/SystemUI.apk/0001-Add-side-fingerprint-sensor-support.patch"
+                    EVAL "sed -i \"s/^\.implements.*/.implements Ljava\/util\/function\/Consumer;/g\" \"$APKTOOL_DIR/system_ext/priv-app/SystemUI/SystemUI.apk/smali/com/android/keyguard/KeyguardSecUpdateMonitorImpl\\\$\\\$ExternalSyntheticLambda28.smali\""
+                    SMALI_PATCH "system_ext" "priv-app/SystemUI/SystemUI.apk" \
+                        "smali/com/android/keyguard/KeyguardSecUpdateMonitorImpl\$\$ExternalSyntheticLambda24.smali" "remove"
+                    SMALI_PATCH "system_ext" "priv-app/SystemUI/SystemUI.apk" \
+                        "smali/com/android/keyguard/KeyguardSecUpdateMonitorImpl\$\$ExternalSyntheticLambda29.smali" "remove"
+                    SMALI_PATCH "system_ext" "priv-app/SystemUI/SystemUI.apk" \
+                        "smali/com/android/keyguard/KeyguardSecUpdateMonitorImpl\$\$ExternalSyntheticLambda33.smali" "remove"
+                    SMALI_PATCH "system_ext" "priv-app/SystemUI/SystemUI.apk" \
+                        "smali/com/android/keyguard/KeyguardSecUpdateMonitorImpl\$\$ExternalSyntheticLambda40.smali" "remove"
+                    SMALI_PATCH "system_ext" "priv-app/SystemUI/SystemUI.apk" \
+                        "smali/com/android/keyguard/KeyguardSecUpdateMonitorImpl\$\$ExternalSyntheticLambda42.smali" "remove"
 
-                if [[ "$TARGET_FINGERPRINT_CONFIG_SENSOR" == *"navi=1"* ]]; then
-                    LOG "- Enabling FP_FEATURE_GESTURE_MODE:Z in /system/system/framework/services.jar/smali/com/android/server/biometrics/SemBiometricFeature.smali"
-                    SMALI_PATCH "system" "system/framework/services.jar" \
-                        "smali/com/android/server/biometrics/SemBiometricFeature.smali" "replace" \
-                        "<clinit>()V" \
-                        "sput-boolean v3, Lcom/android/server/biometrics/SemBiometricFeature;->FP_FEATURE_GESTURE_MODE:Z" \
-                        "sput-boolean v2, Lcom/android/server/biometrics/SemBiometricFeature;->FP_FEATURE_GESTURE_MODE:Z" \
-                        > /dev/null
-                fi
-                if [[ "$TARGET_FINGERPRINT_CONFIG_SENSOR" == *"swipe_enroll"* ]]; then
-                    LOG "- Enabling FP_FEATURE_SWIPE_ENROLL:Z in /system/system/framework/services.jar/smali/com/android/server/biometrics/SemBiometricFeature.smali"
-                    SMALI_PATCH "system" "system/framework/services.jar" \
-                        "smali/com/android/server/biometrics/SemBiometricFeature.smali" "replace" \
-                        "<clinit>()V" \
-                        "sput-boolean v3, Lcom/android/server/biometrics/SemBiometricFeature;->FP_FEATURE_SWIPE_ENROLL:Z" \
-                        "sput-boolean v2, Lcom/android/server/biometrics/SemBiometricFeature;->FP_FEATURE_SWIPE_ENROLL:Z" \
-                        > /dev/null
-                fi
-                if [[ "$TARGET_FINGERPRINT_CONFIG_SENSOR" == *"wof_off"* ]]; then
-                    LOG "- Enabling FP_FEATURE_WOF_OPTION_DEFAULT_OFF:Z in /system/system/framework/services.jar/smali/com/android/server/biometrics/SemBiometricFeature.smali"
-                    SMALI_PATCH "system" "system/framework/services.jar" \
-                        "smali/com/android/server/biometrics/SemBiometricFeature.smali" "replace" \
-                        "<clinit>()V" \
-                        "sput-boolean v3, Lcom/android/server/biometrics/SemBiometricFeature;->FP_FEATURE_WOF_OPTION_DEFAULT_OFF:Z" \
-                        "sput-boolean v2, Lcom/android/server/biometrics/SemBiometricFeature;->FP_FEATURE_WOF_OPTION_DEFAULT_OFF:Z" \
-                        > /dev/null
+                    if [[ "$TARGET_FINGERPRINT_CONFIG_SENSOR" == *"navi=1"* ]]; then
+                        LOG "- Enabling FP_FEATURE_GESTURE_MODE:Z in /system/system/framework/services.jar/smali/com/android/server/biometrics/SemBiometricFeature.smali"
+                        SMALI_PATCH "system" "system/framework/services.jar" \
+                            "smali/com/android/server/biometrics/SemBiometricFeature.smali" "replace" \
+                            "<clinit>()V" \
+                            "sput-boolean v3, Lcom/android/server/biometrics/SemBiometricFeature;->FP_FEATURE_GESTURE_MODE:Z" \
+                            "sput-boolean v2, Lcom/android/server/biometrics/SemBiometricFeature;->FP_FEATURE_GESTURE_MODE:Z" \
+                            > /dev/null
+                    fi
+                    if [[ "$TARGET_FINGERPRINT_CONFIG_SENSOR" == *"swipe_enroll"* ]]; then
+                        LOG "- Enabling FP_FEATURE_SWIPE_ENROLL:Z in /system/system/framework/services.jar/smali/com/android/server/biometrics/SemBiometricFeature.smali"
+                        SMALI_PATCH "system" "system/framework/services.jar" \
+                            "smali/com/android/server/biometrics/SemBiometricFeature.smali" "replace" \
+                            "<clinit>()V" \
+                            "sput-boolean v3, Lcom/android/server/biometrics/SemBiometricFeature;->FP_FEATURE_SWIPE_ENROLL:Z" \
+                            "sput-boolean v2, Lcom/android/server/biometrics/SemBiometricFeature;->FP_FEATURE_SWIPE_ENROLL:Z" \
+                            > /dev/null
+                    fi
+                    if [[ "$TARGET_FINGERPRINT_CONFIG_SENSOR" == *"wof_off"* ]]; then
+                        LOG "- Enabling FP_FEATURE_WOF_OPTION_DEFAULT_OFF:Z in /system/system/framework/services.jar/smali/com/android/server/biometrics/SemBiometricFeature.smali"
+                        SMALI_PATCH "system" "system/framework/services.jar" \
+                            "smali/com/android/server/biometrics/SemBiometricFeature.smali" "replace" \
+                            "<clinit>()V" \
+                            "sput-boolean v3, Lcom/android/server/biometrics/SemBiometricFeature;->FP_FEATURE_WOF_OPTION_DEFAULT_OFF:Z" \
+                            "sput-boolean v2, Lcom/android/server/biometrics/SemBiometricFeature;->FP_FEATURE_WOF_OPTION_DEFAULT_OFF:Z" \
+                            > /dev/null
+                    fi
                 fi
             elif [[ "$TARGET_FINGERPRINT_SENSOR_TYPE" != "ultrasonic" ]]; then
-                # TODO handle this condition
-                LOG_MISSING_PATCHES "SOURCE_FINGERPRINT_CONFIG_SENSOR" "TARGET_FINGERPRINT_CONFIG_SENSOR"
+                LOGW "No fingerprint patches for $SOURCE_FINGERPRINT_SENSOR_TYPE -> $TARGET_FINGERPRINT_SENSOR_TYPE, skipping"
             fi
         else
-            # TODO handle this condition
-            LOG_MISSING_PATCHES "SOURCE_FINGERPRINT_CONFIG_SENSOR" "TARGET_FINGERPRINT_CONFIG_SENSOR"
+            LOGW "No fingerprint patches for $SOURCE_FINGERPRINT_SENSOR_TYPE -> $TARGET_FINGERPRINT_SENSOR_TYPE, skipping"
         fi
     fi
     unset SOURCE_FINGERPRINT_SENSOR_TYPE TARGET_FINGERPRINT_SENSOR_TYPE
@@ -1200,4 +1237,4 @@ elif $SOURCE_WLAN_SUPPORT_WIFI_TO_CELLULAR && ! $TARGET_WLAN_SUPPORT_WIFI_TO_CEL
 fi
 
 unset TARGET_FIRMWARE_PATH
-unset -f GET_FINGERPRINT_SENSOR_TYPE LOG_MISSING_PATCHES
+unset -f GET_FINGERPRINT_SENSOR_TYPE LOG_MISSING_PATCHES CHECK_PATCH
