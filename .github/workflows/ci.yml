@@ -209,6 +209,9 @@ jobs:
             echo "::endgroup::"
           done < "$RUNNER_TEMP/bases.txt"
 
+      # Zip yang lebih kecil dari PART_SIZE (mis. zip INCREMENTAL) TIDAK dipecah dan diunggah dengan
+      # nama aslinya, sama seperti UN1CA resmi. Hanya zip yang lebih besar dipecah jadi .00, .01, ...
+      # Baris release_list.txt: nama|ukuran|sha256|incremental|jumlah_bagian (0 = tidak dipecah)
       - name: Prepare release assets (split flashable zips)
         if: github.event_name != 'pull_request'
         run: |
@@ -227,21 +230,42 @@ jobs:
             ZIP_NAME="$(basename "$ZIP")"
             ZIP_SIZE="$(stat -c %s "$ZIP")"
             ZIP_SHA256="$(sha256sum "$ZIP" | cut -d ' ' -f 1)"
+            BUILD_INFO="$(unzip -p "$ZIP" build_info.txt)"
             # 0 for full zips, source build timestamp for incremental zips
-            ZIP_INC="$(unzip -p "$ZIP" build_info.txt | grep '^incremental=' | cut -d '=' -f 2 -s)"
+            ZIP_INC="$(grep '^incremental=' <<< "$BUILD_INFO" | cut -d '=' -f 2 -s || true)"
+            ZIP_TS="$(grep '^timestamp=' <<< "$BUILD_INFO" | cut -d '=' -f 2 -s || true)"
 
-            # <zip>.00, <zip>.01, ... (same naming as official UN1CA)
-            split -b "$PART_SIZE" -d -a 2 "$ZIP" "$ZIP."
-            ZIP_PARTS="$(find "$OUT_DIR" -maxdepth 1 -name "${ZIP_NAME}.[0-9][0-9]" | wc -l)"
-            EXPECTED_PARTS=$(( (ZIP_SIZE + PART_SIZE - 1) / PART_SIZE ))
-            if [ "$ZIP_PARTS" -ne "$EXPECTED_PARTS" ]; then
-              echo "Error: $ZIP_NAME expected $EXPECTED_PARTS parts, found $ZIP_PARTS" >&2
+            # Updater app: incremental=0 -> shown as a FULL rom; incremental=N -> shown only on the
+            # build whose timestamp is N. So the value in build_info.txt must match the file name.
+            NAME_INC="$(sed -n 's/.*-INCREMENTAL_\([0-9][0-9]*\)-sign\.zip$/\1/p' <<< "$ZIP_NAME")"
+            if [ -n "$NAME_INC" ] && [ "${ZIP_INC:-0}" != "$NAME_INC" ]; then
+              echo "Error: $ZIP_NAME is named INCREMENTAL_$NAME_INC but build_info.txt says incremental='${ZIP_INC:-}'" >&2
               exit 1
+            fi
+            if [ -z "$NAME_INC" ] && [ "${ZIP_INC:-0}" != "0" ]; then
+              echo "Error: $ZIP_NAME has no INCREMENTAL in its name but build_info.txt says incremental=$ZIP_INC" >&2
+              exit 1
+            fi
+            if [ "${ZIP_INC:-0}" != "0" ] && [ "$ZIP_INC" = "$ZIP_TS" ]; then
+              echo "::warning::$ZIP_NAME: incremental source timestamp equals its own target timestamp ($ZIP_TS)"
+            fi
+
+            if [ "$ZIP_SIZE" -gt "$PART_SIZE" ]; then
+              # <zip>.00, <zip>.01, ... (same naming as official UN1CA)
+              split -b "$PART_SIZE" -d -a 2 "$ZIP" "$ZIP."
+              ZIP_PARTS="$(find "$OUT_DIR" -maxdepth 1 -name "${ZIP_NAME}.[0-9][0-9]" | wc -l)"
+              EXPECTED_PARTS=$(( (ZIP_SIZE + PART_SIZE - 1) / PART_SIZE ))
+              if [ "$ZIP_PARTS" -ne "$EXPECTED_PARTS" ]; then
+                echo "Error: $ZIP_NAME expected $EXPECTED_PARTS parts, found $ZIP_PARTS" >&2
+                exit 1
+              fi
+            else
+              ZIP_PARTS=0
             fi
             echo "$ZIP_SHA256  $ZIP_NAME" > "$ZIP.sha256"
 
             echo "$ZIP_NAME|$ZIP_SIZE|$ZIP_SHA256|${ZIP_INC:-0}|$ZIP_PARTS" >> "$LIST"
-            echo "Split $ZIP_NAME ($ZIP_SIZE bytes, incremental=${ZIP_INC:-0}) into $ZIP_PARTS parts"
+            echo "$ZIP_NAME: $ZIP_SIZE bytes, incremental=${ZIP_INC:-0}, parts=$ZIP_PARTS (0 = single file)"
           done
 
           echo "RELEASE_LIST=$LIST" >> "$GITHUB_ENV"
@@ -266,10 +290,10 @@ jobs:
             else
               echo "::warning::$RELEASE_IMAGE not found, release will have no image"
             fi
-            NOTES+="Each ROM zip is split into parts (.00, .01, ...). The UN1CA Updates app downloads and joins them automatically.
-          Zips with INCREMENTAL in the name only update from the build whose timestamp is in the file name.
+            NOTES+="Large ROM zips are split into parts (.00, .01, ...). The UN1CA Updates app downloads and joins them automatically.
+          Zips with INCREMENTAL in the name are single files and only update from the build whose timestamp is in the file name.
 
-          To install manually, join the parts first:
+          To install a split zip manually, join the parts first:
 
               cat UN1CA_<version>_<device>-sign.zip.* > UN1CA_<version>_<device>-sign.zip
 
@@ -295,14 +319,27 @@ jobs:
             fi
           }
 
+          # names of the assets that make up one zip: the zip itself, or its .NN parts
+          asset_names() {
+            local name="$1" parts="$2" i
+            if [ "$parts" -eq 0 ]; then
+              printf '%s\n' "$name"
+            else
+              for i in $(seq 0 $((parts - 1))); do
+                printf '%s.%02d\n' "$name" "$i"
+              done
+            fi
+          }
+
           if [ -f "$RELEASE_IMAGE" ]; then
             upload "$RELEASE_IMAGE"
           fi
 
           while IFS='|' read -r ZIP_NAME ZIP_SIZE ZIP_SHA256 ZIP_INC ZIP_PARTS; do
-            for f in "$OUT_DIR/$ZIP_NAME".[0-9][0-9] "$OUT_DIR/$ZIP_NAME.sha256"; do
-              upload "$f"
-            done
+            while IFS= read -r a; do
+              upload "$OUT_DIR/$a"
+            done < <(asset_names "$ZIP_NAME" "$ZIP_PARTS")
+            upload "$OUT_DIR/$ZIP_NAME.sha256"
           done < "$RELEASE_LIST"
 
           gh release view "$TAG" --repo "$STATIC_REPO" --json assets \
@@ -311,19 +348,23 @@ jobs:
           BASE="https://github.com/$STATIC_REPO/releases/download/$TAG"
           echo "### UN1CA" >> "$GITHUB_STEP_SUMMARY"
           while IFS='|' read -r ZIP_NAME ZIP_SIZE ZIP_SHA256 ZIP_INC ZIP_PARTS; do
-            for i in $(seq 0 $((ZIP_PARTS - 1))); do
-              name="$(printf '%s.%02d' "$ZIP_NAME" "$i")"
+            while IFS= read -r name; do
               want="$(stat -c %s "$OUT_DIR/$name")"
               have="$(awk -v n="$name" '$1 == n { print $2 }' "$RUNNER_TEMP/assets.txt")"
               if [ "$have" != "$want" ]; then
                 echo "Error: $name on release has size '${have:-missing}', expected $want" >&2
                 exit 1
               fi
-            done
+            done < <(asset_names "$ZIP_NAME" "$ZIP_PARTS")
+            FIRST="$(asset_names "$ZIP_NAME" "$ZIP_PARTS" | head -n 1)"
             {
-              echo "- \`$ZIP_NAME\` ($ZIP_PARTS parts, incremental=$ZIP_INC)"
+              if [ "$ZIP_PARTS" -eq 0 ]; then
+                echo "- \`$ZIP_NAME\` (single file, incremental=$ZIP_INC)"
+              else
+                echo "- \`$ZIP_NAME\` ($ZIP_PARTS parts, incremental=$ZIP_INC)"
+              fi
               echo "  - **SHA256**: \`$ZIP_SHA256\`"
-              echo "  - **First part**: $BASE/$ZIP_NAME.00"
+              echo "  - **Download**: $BASE/$FIRST"
             } >> "$GITHUB_STEP_SUMMARY"
           done < "$RELEASE_LIST"
 
@@ -399,19 +440,20 @@ jobs:
             fi
             mkdir -p updates
             python3 - <<'PY'
-          import json, math, os
+          import json, os
           e = os.environ
           p = "updates/manifest.json"
           data = json.load(open(p)) if os.path.exists(p) else {"response": []}
-          part = int(e["PART_SIZE"])
           for line in open(e["RELEASE_LIST"]):
               line = line.rstrip("\n")
               if not line:
                   continue
-              name, size, sha, inc, _parts = line.split("|")
-              size = int(size)
+              name, size, sha, inc, parts = line.split("|")
+              size, parts = int(size), int(parts)
               base = "https://github.com/%s/releases/download/%s/%s" % (
                   e["STATIC_REPO"], e["RELEASE_TAG"], name)
+              # single file: plain name (like official UN1CA); split zip: .00, .01, ...
+              urls = [base] if parts == 0 else ["%s.%02d" % (base, i) for i in range(parts)]
               entry = {
                   "datetime": int(e["ROM_BUILD_TIMESTAMP"]),
                   "device": e["TARGET_CODENAME"],
@@ -419,7 +461,7 @@ jobs:
                   "id": sha,
                   "patch": e["SECURITY_PATCH_INPUT"],
                   "size": size,
-                  "urls": ["%s.%02d" % (base, i) for i in range(math.ceil(size / part))],
+                  "urls": urls,
                   "version": e["ROM_VERSION"],
                   # 0 = full zip; otherwise the build timestamp this zip updates FROM
                   "incremental": int(inc),
