@@ -1,17 +1,17 @@
-From 37f6925c881b952426a14e05b833eea85e0d5203 Mon Sep 17 00:00:00 2001
-From: Salvo Giangreco <giangrecosalvo9@gmail.com>
-Date: Fri, 31 Oct 2025 09:46:00 +0100
+From dd4fbb4aa497b06b7355ed4c4886e47be2e4ed23 Mon Sep 17 00:00:00 2001
+From: Devcore94 <devcore94@users.noreply.github.com>
+Date: Sat, 22 Aug 2026 08:48:36 +0200
 Subject: [PATCH] Remove confirm dialog on sensors QS toggle
 
 ---
- .../qs/tiles/SensorPrivacyToggleTile.smali    | 173 +--------------------
- 1 file changed, 8 insertions(+), 165 deletions(-)
+ .../qs/tiles/SensorPrivacyToggleTile.smali    | 169 +-----------------
+ 1 file changed, 8 insertions(+), 161 deletions(-)
 
 diff --git a/smali_classes3/com/android/systemui/qs/tiles/SensorPrivacyToggleTile.smali b/smali_classes3/com/android/systemui/qs/tiles/SensorPrivacyToggleTile.smali
-index cee16e051f..c4852b9dce 100644
+index 970b4f4be..08dd3053b 100644
 --- a/smali_classes3/com/android/systemui/qs/tiles/SensorPrivacyToggleTile.smali
 +++ b/smali_classes3/com/android/systemui/qs/tiles/SensorPrivacyToggleTile.smali
-@@ -268,182 +268,25 @@
+@@ -268,182 +268,29 @@
  .end method
  
  .method public final toggleTileState()V
@@ -42,15 +42,15 @@ index cee16e051f..c4852b9dce 100644
 -    move-result v0
 +    move-result v2
  
--    invoke-virtual {p0}, Lcom/android/systemui/qs/tiles/SensorPrivacyToggleTile;->getSensorId()I
-+    invoke-virtual {v0, v2}, Lcom/android/systemui/statusbar/policy/IndividualSensorPrivacyControllerImpl;->isSensorBlocked(I)Z
+     invoke-virtual {p0}, Lcom/android/systemui/qs/tiles/SensorPrivacyToggleTile;->getSensorId()I
  
      move-result p0
  
 -    invoke-virtual {v1, p0}, Lcom/android/systemui/statusbar/policy/IndividualSensorPrivacyControllerImpl;->isSensorBlocked(I)Z
--
--    move-result p0
--
++    invoke-virtual {v0, p0}, Lcom/android/systemui/statusbar/policy/IndividualSensorPrivacyControllerImpl;->isSensorBlocked(I)Z
+ 
+     move-result p0
+ 
 -    xor-int/2addr p0, v2
 -
 -    invoke-virtual {v1, v2, v0, p0}, Lcom/android/systemui/statusbar/policy/IndividualSensorPrivacyControllerImpl;->setSensorBlocked(IIZ)V
@@ -203,4 +203,5 @@ index cee16e051f..c4852b9dce 100644
      return-void
  .end method
 -- 
-2.51.1
+2.53.0
+

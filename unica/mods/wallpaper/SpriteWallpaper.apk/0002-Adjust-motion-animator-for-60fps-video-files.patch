@@ -1,14 +1,14 @@
-From 89aa6a96d1f0a410865a0e596377fdf8efc454a7 Mon Sep 17 00:00:00 2001
-From: Salvo Giangreco <giangrecosalvo9@gmail.com>
-Date: Fri, 30 May 2025 00:31:50 +0200
-Subject: [PATCH] Adjust motion animator for 60fps video files
+From ce64c16e75d5b74e245580e5dfa0fb83b3549e1f Mon Sep 17 00:00:00 2001
+From: Devcore94 <devcore94@users.noreply.github.com>
+Date: Sat, 22 Aug 2026 09:01:42 +0200
+Subject: [PATCH] Adjust QPR2 motion animator for 60fps video files
 
 ---
  smali/com/samsung/android/wallpaper/live/infinity/c.smali | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/smali/com/samsung/android/wallpaper/live/infinity/c.smali b/smali/com/samsung/android/wallpaper/live/infinity/c.smali
-index d4832a7..f8fd88d 100644
+index 560d792..1a138ef 100644
 --- a/smali/com/samsung/android/wallpaper/live/infinity/c.smali
 +++ b/smali/com/samsung/android/wallpaper/live/infinity/c.smali
 @@ -45,7 +45,7 @@
@@ -21,4 +21,5 @@ index d4832a7..f8fd88d 100644
      sput-object v0, Lcom/samsung/android/wallpaper/live/infinity/c;->q:Ljava/lang/String;
  
 -- 
-2.51.1
+2.53.0
+

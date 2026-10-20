@@ -1,17 +1,17 @@
-From 9aa75ed04dbdb0aaf5e453b92746b967c21e5be5 Mon Sep 17 00:00:00 2001
-From: Salvo Giangreco <giangrecosalvo9@gmail.com>
-Date: Fri, 17 Oct 2025 12:10:38 +0200
-Subject: [PATCH] Enable Power off lock feature
+From 7d700f5ad8e053933d507ed17b7f5086f7826059 Mon Sep 17 00:00:00 2001
+From: Devcore94 <devcore94@users.noreply.github.com>
+Date: Sat, 22 Aug 2026 01:36:58 +0200
+Subject: [PATCH] Enable Power off lock feature on QPR2
 
 ---
  .../PowerOffLockPreferenceController.smali    | 20 ++-----------------
  1 file changed, 2 insertions(+), 18 deletions(-)
 
 diff --git a/smali_classes5/com/samsung/android/settings/security/PowerOffLockPreferenceController.smali b/smali_classes5/com/samsung/android/settings/security/PowerOffLockPreferenceController.smali
-index 26b74b598..7bc1621be 100644
+index d1bd3f2..ce58ba6 100644
 --- a/smali_classes5/com/samsung/android/settings/security/PowerOffLockPreferenceController.smali
 +++ b/smali_classes5/com/samsung/android/settings/security/PowerOffLockPreferenceController.smali
-@@ -41,29 +41,13 @@
+@@ -49,29 +49,13 @@
  
      move-result p0
  
@@ -44,5 +44,5 @@ index 26b74b598..7bc1621be 100644
  
      return p0
 -- 
-2.51.0
+2.53.0
 

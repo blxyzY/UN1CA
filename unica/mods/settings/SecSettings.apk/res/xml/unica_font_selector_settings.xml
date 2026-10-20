@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<PreferenceScreen android:title="@string/unica_font_selector_title" settings:hierarchicalParentFragment="io.mesalabs.unica.settings.UnicaSettingsFragment" settings:topLevelPreferenceKey="unica_font_selector"
-  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:settings="http://schemas.android.com/apk/res-auto">
-    <androidx.preference.SecEditTextPreference android:title="@string/unica_font_selector_search_title" android:key="unica_font_selector_search" android:summary="@string/unica_font_selector_search_summary" android:persistent="false" />
-    <SecPreferenceCategory android:title="@string/unica_font_selector_available_title" android:key="unica_font_selector_list" />
-</PreferenceScreen>

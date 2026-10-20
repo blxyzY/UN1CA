@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<PreferenceScreen android:title="@string/unica_hide_dev_title" settings:hierarchicalParentFragment="io.mesalabs.unica.settings.spoof.SpoofSettingsFragment" settings:topLevelPreferenceKey="unica_hide_dev"
-  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:settings="http://schemas.android.com/apk/res-auto">
-    <Preference android:title="@string/unica_hide_dev_title" android:key="unica_hide_dev" />
-</PreferenceScreen>

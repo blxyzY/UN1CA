@@ -2,18 +2,12 @@
 <PreferenceScreen android:title="@string/unica_extra_settings_title" settings:hierarchicalParentFragment="io.mesalabs.unica.settings.UnicaSettingsFragment" settings:topLevelPreferenceKey="unica_extra_settings"
   xmlns:android="http://schemas.android.com/apk/res/android" xmlns:settings="http://schemas.android.com/apk/res-auto">
     <SecSwitchPreference android:title="@string/unica_allow_downgrade_title" android:key="unica_allow_downgrade" settings:controller="io.mesalabs.unica.settings.pm.AppDowngradePreferenceController" />
-    <SecSwitchPreference android:title="@string/unica_disable_signature_verification_title" android:key="unica_disable_signature_verification" settings:controller="io.mesalabs.unica.settings.pm.SignatureVerificationPreferenceController" />
     <SecSwitchPreference android:title="@string/unica_allow_sdkbypass_title" android:key="unica_allow_sdkbypass" settings:controller="io.mesalabs.unica.settings.pm.AppTargetSDKBypassPreferenceController" />
     <SecSwitchPreference android:title="@string/unica_asks_title" android:key="unica_asks" settings:controller="io.mesalabs.unica.settings.pm.ASKSPreferenceController" />
     <com.samsung.android.settings.widget.SecInsetCategoryPreference />
     <SecSwitchPreference android:title="@string/unica_secure_ss_title" android:key="unica_secure_ss" settings:controller="io.mesalabs.unica.settings.wm.SecureScreenshotPreferenceController" />
     <SecSwitchPreference android:title="@string/unica_ss_detection_title" android:key="unica_ss_detection" settings:controller="io.mesalabs.unica.settings.wm.CaptureDetectionPreferenceController" />
-    <SecSwitchPreference android:title="@string/unica_mock_location_title" android:key="unica_mock_location" android:summary="@string/unica_mock_location_summary" settings:controller="io.mesalabs.unica.settings.extra.MockLocationPreferenceController" />
     <com.samsung.android.settings.widget.SecInsetCategoryPreference />
     <SecSwitchPreference android:title="@string/unica_gphotos_title" android:key="unica_gphotos" settings:controller="io.mesalabs.unica.settings.extra.GooglePhotosPreferenceController" />
     <SecSwitchPreference android:title="@string/unica_games_spoof_title" android:key="unica_games_spoof" settings:controller="io.mesalabs.unica.settings.extra.GamesPropsPreferenceController" />
-    <SecSwitchPreference android:title="@string/unica_galaxy_store_spoof_title" android:key="unica_galaxy_store_spoof" settings:controller="io.mesalabs.unica.settings.extra.GalaxyStoreSpoofPreferenceController" />
-    <SecSwitchPreference android:title="@string/unica_now_nudge_experimental_title" android:key="unica_now_nudge_experimental" android:summary="@string/unica_now_nudge_experimental_summary" settings:controller="io.mesalabs.unica.settings.extra.NowNudgeExperimentalPreferenceController" />
-    <Preference android:title="@string/unica_now_nudge_replies_title" android:key="unica_now_nudge_replies" android:summary="@string/unica_now_nudge_replies_summary" android:fragment="io.mesalabs.unica.settings.extra.NowNudgeReplyFallbacksFragment" />
-    <Preference android:title="@string/unica_scpm_allowlist_title" android:key="unica_scpm_allowlist" android:summary="@string/unica_scpm_allowlist_summary" android:fragment="io.mesalabs.unica.settings.extra.ScpmAllowlistFragment" />
 </PreferenceScreen>

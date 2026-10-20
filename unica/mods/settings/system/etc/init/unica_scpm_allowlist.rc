@@ -1,6 +1,0 @@
-on property:sys.boot_completed=1
-    exec_background -- /system/bin/sh /system/etc/unica/scpm_allowlist_apply.sh
-
-on property:persist.sys.unica.scpm_allowlist.apply=1
-    exec_background -- /system/bin/sh /system/etc/unica/scpm_allowlist_apply.sh
-    setprop persist.sys.unica.scpm_allowlist.apply 0

@@ -1,92 +1,1373 @@
-From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
-From: Salvo Giangreco <giangrecosalvo9@gmail.com>
-Date: Sat, 30 May 2026 22:39:08 +0200
-Subject: [PATCH] Nuke Knox DualDAR
-
-Refresh for the current SecSettings dex layout. Keep this patch focused
-on active DualDAR feature and policy queries so it applies cleanly on the
-current S918BXXSAFZE1 base.
+From d1b62c69c50f01216187b0cf3e13b6d6c4148086 Mon Sep 17 00:00:00 2001
+From: Devcore94 <devcore94@users.noreply.github.com>
+Date: Sat, 22 Aug 2026 04:26:42 +0200
+Subject: [PATCH] unica: mods: deknox: adapt QPR2 DualDAR Settings
 
 ---
- 14 files changed, 22 insertions(+), 210 deletions(-)
+ smali/com/android/settings/Utils.smali        |   6 +-
+ ...ockGeneric$ChooseLockGenericFragment.smali | 416 +++++-------------
+ ...kPassword$ChooseLockPasswordFragment.smali |  64 +--
+ .../ConfirmDeviceCredentialBaseFragment.smali |  18 +-
+ ...Password$ConfirmLockPasswordFragment.smali | 102 +----
+ .../password/ConfirmLockPassword.smali        |  68 +--
+ .../LockUnificationPreferenceController.smali |   6 -
+ .../knox/container/KnoxContainerManager.smali |  44 +-
+ .../android/knox/ddar/DualDARPolicy.smali     |   4 +-
+ .../KnoxVersionPreferenceController.smali     |  68 +--
+ .../android/settings/knox/KnoxUtils.smali     | 320 +-------------
+ .../lockscreen/LockScreenSettings.smali       |  40 +-
+ .../settings/lockscreen/LockUtils.smali       | 276 ++++++------
+ ...DoScreenLockTypePreferenceController.smali |  30 +-
+ .../settings/password/LockTypePolicy.smali    |  82 +---
+ 15 files changed, 308 insertions(+), 1236 deletions(-)
 
+diff --git a/smali/com/android/settings/Utils.smali b/smali/com/android/settings/Utils.smali
+index 8a177b7b..db0e1a2b 100644
+--- a/smali/com/android/settings/Utils.smali
++++ b/smali/com/android/settings/Utils.smali
+@@ -832,11 +832,7 @@
+     goto :goto_0
+ 
+     :cond_2
+-    invoke-static {p0, p1}, Lcom/samsung/android/settings/knox/KnoxUtils;->isDualDarDoInnerAuthUser(Landroid/content/Context;I)Z
+-
+-    move-result p0
+-
+-    if-eqz p0, :cond_3
++    goto :cond_3
+ 
+     :goto_0
+     return-void
 diff --git a/smali_classes2/com/android/settings/password/ChooseLockGeneric$ChooseLockGenericFragment.smali b/smali_classes2/com/android/settings/password/ChooseLockGeneric$ChooseLockGenericFragment.smali
+index baff5b87..db434fcd 100644
 --- a/smali_classes2/com/android/settings/password/ChooseLockGeneric$ChooseLockGenericFragment.smali
 +++ b/smali_classes2/com/android/settings/password/ChooseLockGeneric$ChooseLockGenericFragment.smali
-@@ -2722,3 +2722 @@
+@@ -83,7 +83,7 @@
+ 
+ .field public mHierarchicalParent:Ljava/lang/String;
+ 
+-.field public mIsDualDarDoEnforcePwdChangeOngoing:Z
++
+ 
+ .field public mIsEnforcedPwdChanged:Z
+ 
+@@ -202,8 +202,6 @@
+ 
+     iput v0, p0, Lcom/android/settings/password/ChooseLockGeneric$ChooseLockGenericFragment;->mChoosePref:I
+ 
+-    iput-boolean v0, p0, Lcom/android/settings/password/ChooseLockGeneric$ChooseLockGenericFragment;->mIsDualDarDoEnforcePwdChangeOngoing:Z
+-
+     return-void
+ .end method
+ 
+@@ -1661,28 +1659,48 @@
+ 
+     if-eqz v0, :cond_0
+ 
+-    goto/16 :goto_3
++    goto/16 :goto_4
+ 
+     :cond_0
+     iget-boolean v0, p0, Lcom/android/settings/password/ChooseLockGeneric$ChooseLockGenericFragment;->mIsFromDualDarDo:Z
+ 
+     const/4 v2, 0x1
+ 
+-    if-eqz v0, :cond_1
++    if-eqz v0, :cond_2
+ 
+     invoke-virtual {p0}, Landroidx/fragment/app/Fragment;->getActivity()Landroidx/fragment/app/FragmentActivity;
+ 
+     move-result-object p0
+ 
+-    invoke-static {p0}, Lcom/samsung/android/settings/knox/KnoxUtils;->isChangeRequestedForInner(Landroid/content/Context;)I
++    sget-object v0, Lcom/samsung/android/settings/knox/KnoxUtils;->mDeviceType:Ljava/lang/String;
++
++    invoke-static {p0}, Lcom/samsung/android/knox/EnterpriseDeviceManager;->getInstance(Landroid/content/Context;)Lcom/samsung/android/knox/EnterpriseDeviceManager;
++
++    move-result-object p0
++
++    if-eqz p0, :cond_1
++
++    invoke-virtual {p0}, Lcom/samsung/android/knox/EnterpriseDeviceManager;->getPasswordPolicy()Lcom/samsung/android/knox/devicesecurity/PasswordPolicy;
++
++    move-result-object p0
++
++    if-eqz p0, :cond_1
++
++    invoke-virtual {p0}, Lcom/samsung/android/knox/devicesecurity/PasswordPolicy;->isChangeRequestedForInner()I
+ 
+     move-result p0
+ 
++    goto :goto_0
++
++    :cond_1
++    move p0, v1
++
++    :goto_0
+     if-lt p0, v2, :cond_a
+ 
+-    goto :goto_2
++    return v2
+ 
+-    :cond_1
++    :cond_2
+     iget-object v0, p0, Lcom/android/settings/password/ChooseLockGeneric$ChooseLockGenericFragment;->mLockTypePolicy:Lcom/samsung/android/settings/password/LockTypePolicy;
+ 
+     if-eqz v0, :cond_a
+@@ -1691,15 +1709,15 @@
+ 
+     move-result v0
+ 
+-    if-eqz v0, :cond_2
++    if-eqz v0, :cond_3
+ 
+     iget-object v0, p0, Lcom/android/settings/password/ChooseLockGeneric$ChooseLockGenericFragment;->mLockTypePolicy:Lcom/samsung/android/settings/password/LockTypePolicy;
+ 
+-    iget-boolean v0, v0, Lcom/samsung/android/settings/password/LockTypePolicy;->mIsDualDarDoUser:Z
++    invoke-virtual {v0}, Ljava/lang/Object;->getClass()Ljava/lang/Class;
+ 
+-    if-eqz v0, :cond_3
++    goto :goto_1
+ 
+-    :cond_2
++    :cond_3
+     iget-object v0, p0, Lcom/android/settings/password/ChooseLockGeneric$ChooseLockGenericFragment;->mLockTypePolicy:Lcom/samsung/android/settings/password/LockTypePolicy;
+ 
+     invoke-virtual {v0}, Lcom/samsung/android/settings/password/LockTypePolicy;->isDevicePasswordAdminEnabled()Z
+@@ -1708,7 +1726,7 @@
+ 
+     if-eqz v0, :cond_a
+ 
+-    :cond_3
++    :goto_1
+     invoke-virtual {p0}, Landroidx/fragment/app/Fragment;->getActivity()Landroidx/fragment/app/FragmentActivity;
+ 
+     move-result-object v0
+@@ -1735,12 +1753,12 @@
+ 
+     move-result v3
+ 
+-    goto :goto_0
++    goto :goto_2
+ 
+     :cond_4
+     move v3, v1
+ 
+-    :goto_0
++    :goto_2
+     const/4 v4, 0x2
+ 
+     if-gtz v3, :cond_5
+@@ -1753,12 +1771,12 @@
+     :cond_6
+     move v5, v2
+ 
+-    goto :goto_1
++    goto :goto_3
+ 
+     :cond_7
+     move v5, v1
+ 
+-    :goto_1
++    :goto_3
+     if-lt v0, v2, :cond_8
+ 
+     if-eqz v5, :cond_8
+@@ -1771,11 +1789,6 @@
+ 
+     if-eqz v6, :cond_8
+ 
+-    iget-boolean v6, p0, Lcom/android/settings/password/ChooseLockGeneric$ChooseLockGenericFragment;->mIsDualDarDoEnforcePwdChangeOngoing:Z
+-
+-    if-nez v6, :cond_8
+-
+-    :goto_2
+     return v2
+ 
+     :cond_8
+@@ -1851,7 +1864,7 @@
+     invoke-virtual {p0, v0}, Lcom/android/settings/SettingsPreferenceFragment;->setResult(I)V
+ 
+     :cond_a
+-    :goto_3
++    :goto_4
+     return v1
+ .end method
+ 
+@@ -1984,7 +1997,7 @@
+ 
+     iget-boolean v0, v0, Lcom/samsung/android/settings/password/LockTypePolicy;->mIsKnoxId:Z
+ 
+-    if-eqz v0, :cond_3e
++    if-eqz v0, :cond_3c
+ 
+     invoke-virtual {v1}, Lcom/android/settings/password/ChooseLockGeneric$ChooseLockGenericFragment;->setExtraTitle()V
+ 
+@@ -2369,7 +2382,7 @@
+ 
+     move-result v0
+ 
+-    if-eq v0, v7, :cond_3e
++    if-eq v0, v7, :cond_3c
+ 
+     invoke-virtual {v1}, Landroidx/fragment/app/Fragment;->getActivity()Landroidx/fragment/app/FragmentActivity;
+ 
+@@ -2449,7 +2462,7 @@
+ 
+     check-cast v0, Landroidx/preference/SwitchPreference;
+ 
+-    if-eqz v0, :cond_3e
++    if-eqz v0, :cond_3c
+ 
+     invoke-virtual {v1}, Landroidx/fragment/app/Fragment;->getContext()Landroid/content/Context;
+ 
+@@ -2551,13 +2564,13 @@
+ 
+     iput v4, v1, Lcom/android/settings/password/ChooseLockGeneric$ChooseLockGenericFragment;->mChoosePref:I
+ 
+-    if-eqz v3, :cond_3e
++    if-eqz v3, :cond_3c
+ 
+     invoke-virtual {v3, v11, v4}, Landroid/content/Intent;->getBooleanExtra(Ljava/lang/String;Z)Z
+ 
+     move-result v0
+ 
+-    if-eqz v0, :cond_3e
++    if-eqz v0, :cond_3c
+ 
+     invoke-virtual {v1, v2, v3}, Lcom/android/settings/password/ChooseLockGeneric$ChooseLockGenericFragment;->finishWithResult(ILandroid/content/Intent;)V
+ 
+@@ -2574,8 +2587,6 @@
+ 
+     const/16 v15, 0x2719
+ 
+-    const-string v10, "android.intent.extra.USER_ID"
+-
+     if-nez v9, :cond_28
+ 
+     iget-object v9, v1, Lcom/android/settings/password/ChooseLockGeneric$ChooseLockGenericFragment;->mLockTypePolicy:Lcom/samsung/android/settings/password/LockTypePolicy;
+@@ -2612,9 +2623,11 @@
+     invoke-virtual {v0, v2}, Landroid/content/Intent;->putExtras(Landroid/os/Bundle;)Landroid/content/Intent;
+ 
+     :cond_20
+-    iget v2, v1, Lcom/android/settings/password/ChooseLockGeneric$ChooseLockGenericFragment;->mUserId:I
++    const-string v2, "android.intent.extra.USER_ID"
+ 
+-    invoke-virtual {v0, v10, v2}, Landroid/content/Intent;->putExtra(Ljava/lang/String;I)Landroid/content/Intent;
++    iget v3, v1, Lcom/android/settings/password/ChooseLockGeneric$ChooseLockGenericFragment;->mUserId:I
++
++    invoke-virtual {v0, v2, v3}, Landroid/content/Intent;->putExtra(Ljava/lang/String;I)Landroid/content/Intent;
+ 
+     invoke-virtual {v1, v0}, Landroidx/fragment/app/Fragment;->startActivity(Landroid/content/Intent;)V
+ 
+@@ -2627,7 +2640,7 @@
+ 
+     if-ne v0, v5, :cond_23
+ 
+-    if-eqz v2, :cond_3e
++    if-eqz v2, :cond_3c
+ 
+     invoke-virtual {v1}, Landroidx/fragment/app/Fragment;->getActivity()Landroidx/fragment/app/FragmentActivity;
+ 
+@@ -2658,13 +2671,13 @@
+ 
+     iput v4, v1, Lcom/android/settings/password/ChooseLockGeneric$ChooseLockGenericFragment;->mChoosePref:I
+ 
+-    if-eqz v3, :cond_3e
++    if-eqz v3, :cond_3c
+ 
+     invoke-virtual {v3, v11, v4}, Landroid/content/Intent;->getBooleanExtra(Ljava/lang/String;Z)Z
+ 
+     move-result v0
+ 
+-    if-eqz v0, :cond_3e
++    if-eqz v0, :cond_3c
+ 
+     invoke-virtual {v1, v2, v3}, Lcom/android/settings/password/ChooseLockGeneric$ChooseLockGenericFragment;->finishWithResult(ILandroid/content/Intent;)V
+ 
+@@ -2683,7 +2696,7 @@
+     const/4 v10, 0x0
+ 
+     :goto_5
+-    if-eqz v10, :cond_3e
++    if-eqz v10, :cond_3c
+ 
+     invoke-virtual {v1, v10}, Lcom/android/settings/password/ChooseLockGeneric$ChooseLockGenericFragment;->setUnlockMethod(Ljava/lang/String;)Z
+ 
+@@ -2719,84 +2732,29 @@
+     :cond_29
+     sget-object v16, Lcom/samsung/android/settings/knox/KnoxUtils;->mDeviceType:Ljava/lang/String;
+ 
 -    invoke-static {}, Lcom/samsung/android/knox/dar/ddar/DualDarManager;->isOnDeviceOwnerEnabled()Z
 -
 -    move-result v16
-+    const/16 v16, 0x0
-@@ -2789,3 +2787 @@
+-
+-    if-eqz v16, :cond_2a
+-
+-    iget-boolean v15, v1, Lcom/android/settings/password/ChooseLockGeneric$ChooseLockGenericFragment;->mIsEnforcedPwdChanged:Z
+-
+-    if-eqz v15, :cond_2a
+-
+-    iget-boolean v15, v1, Lcom/android/settings/password/ChooseLockGeneric$ChooseLockGenericFragment;->mIsFromDualDarDo:Z
+-
+-    if-nez v15, :cond_2a
+-
+-    if-eqz v2, :cond_2a
+-
+-    iput-boolean v8, v1, Lcom/android/settings/password/ChooseLockGeneric$ChooseLockGenericFragment;->mIsDualDarDoEnforcePwdChangeOngoing:Z
+-
+-    invoke-virtual {v1}, Landroidx/fragment/app/Fragment;->getActivity()Landroidx/fragment/app/FragmentActivity;
+-
+-    move-result-object v15
+-
+-    new-instance v7, Landroid/content/Intent;
+-
+-    const-class v9, Lcom/android/settings/password/ChooseLockGeneric$InternalActivity;
+-
+-    invoke-direct {v7, v15, v9}, Landroid/content/Intent;-><init>(Landroid/content/Context;Ljava/lang/Class;)V
+-
+-    iget v9, v1, Lcom/android/settings/password/ChooseLockGeneric$ChooseLockGenericFragment;->mUserId:I
+-
+-    invoke-virtual {v7, v10, v9}, Landroid/content/Intent;->putExtra(Ljava/lang/String;I)Landroid/content/Intent;
+-
+-    const-string v9, "isEnforcedPwdChanged"
+-
+-    invoke-virtual {v7, v9, v8}, Landroid/content/Intent;->putExtra(Ljava/lang/String;Z)Landroid/content/Intent;
+-
+-    const-string v9, "isEnforcedPwdChangedForDualDarDo"
+-
+-    invoke-virtual {v7, v9, v8}, Landroid/content/Intent;->putExtra(Ljava/lang/String;Z)Landroid/content/Intent;
+-
+-    invoke-virtual {v15, v7}, Landroid/app/Activity;->startActivity(Landroid/content/Intent;)V
+-
+-    invoke-virtual {v15}, Landroid/app/Activity;->finish()V
+-
+     :cond_2a
+     if-ne v2, v8, :cond_2b
+ 
+     invoke-virtual {v1}, Landroidx/fragment/app/Fragment;->getContext()Landroid/content/Context;
+ 
+-    move-result-object v7
++    move-result-object v10
+ 
+-    iget v9, v1, Lcom/android/settings/password/ChooseLockGeneric$ChooseLockGenericFragment;->mUserId:I
++    iget v15, v1, Lcom/android/settings/password/ChooseLockGeneric$ChooseLockGenericFragment;->mUserId:I
+ 
+-    invoke-static {v7, v9}, Lcom/samsung/android/settings/lockscreen/LockUtils;->updateSetUpCredentialIfNeeded(Landroid/content/Context;I)V
++    invoke-static {v10, v15}, Lcom/samsung/android/settings/lockscreen/LockUtils;->updateSetUpCredentialIfNeeded(Landroid/content/Context;I)V
+ 
+     :cond_2b
+     invoke-virtual {v1, v2}, Lcom/android/settings/SettingsPreferenceFragment;->setResult(I)V
+ 
+-    if-ne v0, v11, :cond_31
++    if-ne v0, v11, :cond_2f
+ 
+     if-eq v2, v8, :cond_2c
+ 
+-    if-eqz v2, :cond_2f
++    if-eqz v2, :cond_2d
+ 
+     :cond_2c
+     sget-object v0, Lcom/samsung/android/settings/knox/KnoxUtils;->mDeviceType:Ljava/lang/String;
+ 
 -    invoke-static {}, Lcom/samsung/android/knox/dar/ddar/DualDarManager;->isOnDeviceOwnerEnabled()Z
 -
 -    move-result v0
-+    const/4 v0, 0x0
-@@ -3904,3 +3900 @@
+-
+-    if-eqz v0, :cond_2d
+-
+-    iget-boolean v0, v1, Lcom/android/settings/password/ChooseLockGeneric$ChooseLockGenericFragment;->mIsEnforcedPwdChanged:Z
+-
+-    if-nez v0, :cond_2e
+-
+-    :cond_2d
+     invoke-virtual {v1}, Landroidx/fragment/app/Fragment;->getActivity()Landroidx/fragment/app/FragmentActivity;
+ 
+     move-result-object v0
+@@ -2841,19 +2799,18 @@
+ 
+     invoke-static {v0, v2, v4}, Lcom/samsung/android/settings/knox/KnoxUtils;->setTwoFactorValue(Landroid/content/Context;II)V
+ 
+-    :cond_2e
+     iget v0, v1, Lcom/android/settings/password/ChooseLockGeneric$ChooseLockGenericFragment;->mUserId:I
+ 
+     invoke-static {v0}, Lcom/android/settings/password/ChooseLockGeneric$ChooseLockGenericFragment;->resetUcmKeyguard(I)V
+ 
+-    :cond_2f
++    :cond_2d
+     iget-object v0, v1, Lcom/android/settings/password/ChooseLockGeneric$ChooseLockGenericFragment;->mLockTypePolicy:Lcom/samsung/android/settings/password/LockTypePolicy;
+ 
+     invoke-virtual {v0}, Lcom/samsung/android/settings/password/LockTypePolicy;->isEnterpriseUser()Z
+ 
+     move-result v0
+ 
+-    if-eqz v0, :cond_30
++    if-eqz v0, :cond_2e
+ 
+     sput-boolean v8, Lcom/samsung/android/settings/knox/KnoxUtils;->mHasChooseLockResult:Z
+ 
+@@ -2875,18 +2832,18 @@
+ 
+     invoke-static {v0, v2, v5}, Landroidx/preference/Preference$$ExternalSyntheticOutline0;->m(Ljava/lang/StringBuilder;ILjava/lang/String;)V
+ 
+-    :cond_30
++    :cond_2e
+     invoke-virtual {v1}, Lcom/android/settings/password/ChooseLockGeneric$ChooseLockGenericFragment;->finish()V
+ 
+     iget-boolean v0, v1, Lcom/android/settings/password/ChooseLockGeneric$ChooseLockGenericFragment;->mIsEnforcedPwdChanged:Z
+ 
+-    if-eqz v0, :cond_3e
++    if-eqz v0, :cond_3c
+ 
+     iget-object v0, v1, Lcom/android/settings/password/ChooseLockGeneric$ChooseLockGenericFragment;->mLockTypePolicy:Lcom/samsung/android/settings/password/LockTypePolicy;
+ 
+     iget-boolean v0, v0, Lcom/samsung/android/settings/password/LockTypePolicy;->mIsKnoxId:Z
+ 
+-    if-eqz v0, :cond_3e
++    if-eqz v0, :cond_3c
+ 
+     invoke-virtual {v1}, Landroidx/fragment/app/Fragment;->getActivity()Landroidx/fragment/app/FragmentActivity;
+ 
+@@ -2896,20 +2853,16 @@
+ 
+     return-void
+ 
+-    :cond_31
++    :cond_2f
+     const v5, 0x7f153179
+ 
+-    const/16 v7, 0x2712
+-
+-    if-ne v0, v7, :cond_35
++    if-ne v0, v9, :cond_33
+ 
+     const-string/jumbo v0, "two factor result : code : "
+ 
+     invoke-static {v2, v0, v6}, Landroidx/appcompat/widget/ListPopupWindow$$ExternalSyntheticOutline0;->m(ILjava/lang/String;Ljava/lang/String;)V
+ 
+-    const/4 v0, -0x1
+-
+-    if-ne v2, v0, :cond_32
++    if-ne v2, v7, :cond_30
+ 
+     invoke-virtual {v1}, Landroidx/fragment/app/Fragment;->getContext()Landroid/content/Context;
+ 
+@@ -2941,8 +2894,8 @@
+ 
+     return-void
+ 
+-    :cond_32
+-    if-ne v2, v8, :cond_33
++    :cond_30
++    if-ne v2, v8, :cond_31
+ 
+     invoke-virtual {v1}, Lcom/android/settings/SettingsPreferenceFragment;->getContentResolver()Landroid/content/ContentResolver;
+ 
+@@ -2968,7 +2921,7 @@
+ 
+     return-void
+ 
+-    :cond_33
++    :cond_31
+     const-string/jumbo v0, "two factor Not set successfully"
+ 
+     invoke-static {v6, v0}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
+@@ -2979,7 +2932,7 @@
+ 
+     check-cast v0, Landroidx/preference/SwitchPreference;
+ 
+-    if-eqz v0, :cond_34
++    if-eqz v0, :cond_32
+ 
+     iget v2, v1, Lcom/android/settings/password/ChooseLockGeneric$ChooseLockGenericFragment;->mUserId:I
+ 
+@@ -2987,19 +2940,19 @@
+ 
+     move-result v2
+ 
+-    if-eqz v2, :cond_34
++    if-eqz v2, :cond_32
+ 
+     invoke-virtual {v0, v5}, Landroidx/preference/Preference;->setSummary(I)V
+ 
+-    :cond_34
++    :cond_32
+     invoke-virtual {v1}, Lcom/android/settings/password/ChooseLockGeneric$ChooseLockGenericFragment;->finish()V
+ 
+     return-void
+ 
+-    :cond_35
++    :cond_33
+     const/16 v6, 0x2713
+ 
+-    if-ne v0, v6, :cond_39
++    if-ne v0, v6, :cond_37
+ 
+     invoke-virtual {v1, v12}, Lcom/android/settings/core/InstrumentedPreferenceFragment;->findPreference(Ljava/lang/CharSequence;)Landroidx/preference/Preference;
+ 
+@@ -3007,13 +2960,11 @@
+ 
+     check-cast v0, Landroidx/preference/SwitchPreference;
+ 
+-    if-eqz v0, :cond_3e
++    if-eqz v0, :cond_3c
+ 
+     invoke-virtual {v0, v8}, Landroidx/preference/Preference;->setEnabled(Z)V
+ 
+-    const/4 v3, -0x1
+-
+-    if-ne v2, v3, :cond_36
++    if-ne v2, v7, :cond_34
+ 
+     invoke-virtual {v0, v8}, Landroidx/preference/TwoStatePreference;->setChecked(Z)V
+ 
+@@ -3033,7 +2984,7 @@
+ 
+     iget-boolean v0, v0, Lcom/samsung/android/settings/password/LockTypePolicy;->mIsSecureFolderId:Z
+ 
+-    if-eqz v0, :cond_36
++    if-eqz v0, :cond_34
+ 
+     invoke-virtual {v1}, Landroidx/fragment/app/Fragment;->getContext()Landroid/content/Context;
+ 
+@@ -3043,7 +2994,7 @@
+ 
+     move-result v0
+ 
+-    if-nez v0, :cond_36
++    if-nez v0, :cond_34
+ 
+     invoke-virtual {v1}, Landroidx/fragment/app/Fragment;->getActivity()Landroidx/fragment/app/FragmentActivity;
+ 
+@@ -3053,7 +3004,7 @@
+ 
+     invoke-static {v0, v3, v8, v4}, Lcom/samsung/android/settings/security/SecurityUtils;->setBiometricLock(Landroid/content/Context;Lcom/android/internal/widget/LockPatternUtils;II)V
+ 
+-    :cond_36
++    :cond_34
+     invoke-virtual {v1}, Landroidx/fragment/app/Fragment;->getContext()Landroid/content/Context;
+ 
+     move-result-object v0
+@@ -3064,7 +3015,7 @@
+ 
+     move-result v0
+ 
+-    if-nez v0, :cond_3e
++    if-nez v0, :cond_3c
+ 
+     iget-object v0, v1, Lcom/android/settings/password/ChooseLockGeneric$ChooseLockGenericFragment;->mLockPatternUtils:Lcom/android/internal/widget/LockPatternUtils;
+ 
+@@ -3074,7 +3025,7 @@
+ 
+     move-result v0
+ 
+-    if-nez v0, :cond_37
++    if-nez v0, :cond_35
+ 
+     iget-object v0, v1, Lcom/android/settings/password/ChooseLockGeneric$ChooseLockGenericFragment;->mLockTypePolicy:Lcom/samsung/android/settings/password/LockTypePolicy;
+ 
+@@ -3082,12 +3033,10 @@
+ 
+     move-result v0
+ 
+-    if-eqz v0, :cond_3e
++    if-eqz v0, :cond_3c
+ 
+-    :cond_37
+-    const/4 v0, -0x1
+-
+-    if-ne v2, v0, :cond_38
++    :cond_35
++    if-ne v2, v7, :cond_36
+ 
+     invoke-virtual {v1}, Landroidx/fragment/app/Fragment;->getActivity()Landroidx/fragment/app/FragmentActivity;
+ 
+@@ -3095,15 +3044,15 @@
+ 
+     invoke-virtual {v0, v8}, Landroid/app/Activity;->setResult(I)V
+ 
+-    :cond_38
++    :cond_36
+     invoke-virtual {v1}, Lcom/android/settings/password/ChooseLockGeneric$ChooseLockGenericFragment;->finish()V
+ 
+     return-void
+ 
+-    :cond_39
++    :cond_37
+     const/16 v4, 0x3ec
+ 
+-    if-ne v0, v4, :cond_3c
++    if-ne v0, v4, :cond_3a
+ 
+     invoke-virtual {v1, v13}, Lcom/android/settings/core/InstrumentedPreferenceFragment;->findPreference(Ljava/lang/CharSequence;)Landroidx/preference/Preference;
+ 
+@@ -3111,13 +3060,11 @@
+ 
+     check-cast v0, Landroidx/preference/SwitchPreference;
+ 
+-    if-eqz v0, :cond_3e
++    if-eqz v0, :cond_3c
+ 
+     invoke-virtual {v0, v8}, Landroidx/preference/Preference;->setEnabled(Z)V
+ 
+-    const/4 v3, -0x1
+-
+-    if-ne v2, v3, :cond_3a
++    if-ne v2, v7, :cond_38
+ 
+     invoke-virtual {v0, v5}, Landroidx/preference/Preference;->setSummary(I)V
+ 
+@@ -3133,7 +3080,7 @@
+ 
+     invoke-static {v4, v0, v3}, Lcom/samsung/android/settings/biometrics/face/FaceSettingsHelper;->setFaceLock(ILandroid/content/Context;Lcom/android/internal/widget/LockPatternUtils;)V
+ 
+-    :cond_3a
++    :cond_38
+     invoke-virtual {v1}, Landroidx/fragment/app/Fragment;->getContext()Landroid/content/Context;
+ 
+     move-result-object v0
+@@ -3144,11 +3091,9 @@
+ 
+     move-result v0
+ 
+-    if-nez v0, :cond_3e
+-
+-    const/4 v0, -0x1
++    if-nez v0, :cond_3c
+ 
+-    if-ne v2, v0, :cond_3b
++    if-ne v2, v7, :cond_39
+ 
+     invoke-virtual {v1}, Landroidx/fragment/app/Fragment;->getActivity()Landroidx/fragment/app/FragmentActivity;
+ 
+@@ -3156,17 +3101,17 @@
+ 
+     invoke-virtual {v0, v8}, Landroid/app/Activity;->setResult(I)V
+ 
+-    :cond_3b
++    :cond_39
+     invoke-virtual {v1}, Lcom/android/settings/password/ChooseLockGeneric$ChooseLockGenericFragment;->finish()V
+ 
+     return-void
+ 
+-    :cond_3c
++    :cond_3a
+     const/16 v2, 0x2719
+ 
+-    if-ne v0, v2, :cond_3f
++    if-ne v0, v2, :cond_3d
+ 
+-    if-eqz v3, :cond_3d
++    if-eqz v3, :cond_3b
+ 
+     invoke-virtual {v3, v14}, Landroid/content/Intent;->getStringExtra(Ljava/lang/String;)Ljava/lang/String;
+ 
+@@ -3174,19 +3119,19 @@
+ 
+     goto :goto_7
+ 
+-    :cond_3d
++    :cond_3b
+     const/4 v10, 0x0
+ 
+     :goto_7
+-    if-eqz v10, :cond_3e
++    if-eqz v10, :cond_3c
+ 
+     invoke-virtual {v1, v10}, Lcom/android/settings/password/ChooseLockGeneric$ChooseLockGenericFragment;->setUnlockMethod(Ljava/lang/String;)Z
+ 
+-    :cond_3e
++    :cond_3c
+     :goto_8
+     return-void
+ 
+-    :cond_3f
++    :cond_3d
+     invoke-virtual {v1}, Lcom/android/settings/password/ChooseLockGeneric$ChooseLockGenericFragment;->finish()V
+ 
+     return-void
+@@ -3399,9 +3344,9 @@
+ 
+     if-eqz v6, :cond_6
+ 
+-    invoke-static {v2}, Lcom/samsung/android/settings/knox/KnoxUtils;->getDualDarDoInnerAuthUserId(Landroid/content/Context;)I
++    sget-object v6, Lcom/samsung/android/settings/knox/KnoxUtils;->mDeviceType:Ljava/lang/String;
+ 
+-    move-result v6
++    const/4 v6, -0x1
+ 
+     iput v6, v0, Lcom/android/settings/password/ChooseLockGeneric$ChooseLockGenericFragment;->mUserId:I
+ 
+@@ -3901,44 +3846,6 @@
+     :goto_c
+     iput-boolean v3, v0, Lcom/android/settings/password/ChooseLockGeneric$ChooseLockGenericFragment;->mIsEnforcedPwdChanged:Z
+ 
 -    invoke-static {}, Lcom/samsung/android/knox/dar/ddar/DualDarManager;->isOnDeviceOwnerEnabled()Z
 -
 -    move-result v3
-+    const/4 v3, 0x0
-@@ -8798,3 +8792 @@
--    invoke-static {v10}, Lcom/samsung/android/knox/SemPersonaManager;->isDarDualEncryptionEnabled(I)Z
+-
+-    if-eqz v3, :cond_19
+-
+-    iget-boolean v3, v0, Lcom/android/settings/password/ChooseLockGeneric$ChooseLockGenericFragment;->mIsEnforcedPwdChanged:Z
+-
+-    if-eqz v3, :cond_19
+-
+-    const-string v3, "isEnforcedPwdChangedForDualDarDo"
+-
+-    const/4 v11, 0x0
+-
+-    invoke-virtual {v4, v3, v11}, Landroid/content/Intent;->getBooleanExtra(Ljava/lang/String;Z)Z
 -
 -    move-result v3
-+    const/4 v3, 0x0
+-
+-    iput-boolean v3, v0, Lcom/android/settings/password/ChooseLockGeneric$ChooseLockGenericFragment;->mIsFromDualDarDo:Z
+-
+-    if-eqz v3, :cond_19
+-
+-    invoke-static {v2}, Lcom/samsung/android/settings/knox/KnoxUtils;->getDualDarDoInnerAuthUserId(Landroid/content/Context;)I
+-
+-    move-result v3
+-
+-    iput v3, v0, Lcom/android/settings/password/ChooseLockGeneric$ChooseLockGenericFragment;->mUserId:I
+-
+-    new-instance v5, Lcom/samsung/android/settings/password/LockTypePolicy;
+-
+-    invoke-virtual {v0}, Lcom/android/settings/SettingsPreferenceFragment;->getIntent()Landroid/content/Intent;
+-
+-    move-result-object v9
+-
+-    invoke-direct {v5, v2, v9, v3}, Lcom/samsung/android/settings/password/LockTypePolicy;-><init>(Landroid/content/Context;Landroid/content/Intent;I)V
+-
+-    iput-object v5, v0, Lcom/android/settings/password/ChooseLockGeneric$ChooseLockGenericFragment;->mLockTypePolicy:Lcom/samsung/android/settings/password/LockTypePolicy;
+-
+     :cond_19
+     const-string v3, "fromPwdNotification"
+ 
+@@ -8216,18 +8123,6 @@
+     move/from16 v25, v17
+ 
+     :cond_d
+-    iget-boolean v3, v5, Lcom/samsung/android/settings/password/LockTypePolicy;->mIsDualDarDoUser:Z
+-
+-    if-eqz v3, :cond_e
+-
+-    const/16 v18, 0x2
+-
+-    aget v3, v23, v18
+-
+-    mul-int/2addr v11, v3
+-
+-    move/from16 v25, v17
+-
+     :cond_e
+     iget v3, v5, Lcom/samsung/android/settings/password/LockTypePolicy;->mUnificationProfileId:I
+ 
+@@ -8320,16 +8215,6 @@
+     move/from16 v3, v17
+ 
+     :cond_14
+-    iget-boolean v11, v5, Lcom/samsung/android/settings/password/LockTypePolicy;->mIsDualDarDoUser:Z
+-
+-    if-eqz v11, :cond_15
+-
+-    aget v3, v23, v16
+-
+-    mul-int/2addr v10, v3
+-
+-    move/from16 v3, v17
+-
+     :cond_15
+     iget v11, v5, Lcom/samsung/android/settings/password/LockTypePolicy;->mUnificationProfileId:I
+ 
+@@ -8633,14 +8518,6 @@
+     goto/16 :goto_10
+ 
+     :cond_27
+-    iget-boolean v3, v5, Lcom/samsung/android/settings/password/LockTypePolicy;->mIsDualDarDoUser:Z
+-
+-    if-eqz v3, :cond_28
+-
+-    aget v3, v23, v17
+-
+-    goto/16 :goto_3
+-
+     :cond_28
+     :goto_16
+     const/4 v3, 0x1
+@@ -8735,13 +8612,7 @@
+     move/from16 v25, v17
+ 
+     :cond_2d
+-    iget-boolean v3, v5, Lcom/samsung/android/settings/password/LockTypePolicy;->mIsDualDarDoUser:Z
+-
+-    if-eqz v3, :cond_10
+-
+-    aget v3, v23, v21
+-
+-    goto/16 :goto_c
++    goto/16 :cond_10
+ 
+     :cond_2e
+     move-object/from16 v24, v11
+@@ -8810,13 +8681,7 @@
+     move/from16 v25, v17
+ 
+     :cond_31
+-    iget-boolean v3, v5, Lcom/samsung/android/settings/password/LockTypePolicy;->mIsDualDarDoUser:Z
+-
+-    if-eqz v3, :cond_10
+-
+-    aget v3, v23, v16
+-
+-    goto/16 :goto_c
++    goto/16 :cond_10
+ 
+     :cond_32
+     :goto_19
+@@ -8940,35 +8805,6 @@
+ 
+     move-object/from16 v26, v10
+ 
+-    iget-boolean v10, v3, Lcom/samsung/android/settings/password/LockTypePolicy;->mIsDualDarDoEnabled:Z
+-
+-    if-eqz v10, :cond_36
+-
+-    iget-object v10, v3, Lcom/samsung/android/settings/password/LockTypePolicy;->mContext:Landroid/content/Context;
+-
+-    sget-object v27, Lcom/samsung/android/settings/knox/KnoxUtils;->mDeviceType:Ljava/lang/String;
+-
+-    move/from16 v27, v11
+-
+-    new-instance v11, Lcom/android/internal/widget/LockPatternUtils;
+-
+-    invoke-direct {v11, v10}, Lcom/android/internal/widget/LockPatternUtils;-><init>(Landroid/content/Context;)V
+-
+-    invoke-virtual {v11}, Lcom/android/internal/widget/LockPatternUtils;->getLockPatternUtilForDualDarDo()Lcom/android/internal/widget/LockPatternUtils$LockPatternUtilForDualDarDo;
+-
+-    move-result-object v10
+-
+-    invoke-virtual {v10}, Lcom/android/internal/widget/LockPatternUtils$LockPatternUtilForDualDarDo;->getInnerAuthUserForDo()I
+-
+-    move-result v10
+-
+-    invoke-virtual {v11, v10}, Lcom/android/internal/widget/LockPatternUtils;->isSecure(I)Z
+-
+-    move-result v10
+-
+-    goto :goto_1b
+-
+-    :cond_36
+     move/from16 v27, v11
+ 
+     const/4 v10, 0x0
+@@ -9372,21 +9208,13 @@
+ 
+     if-eqz v5, :cond_4c
+ 
+-    iget-object v5, v3, Lcom/samsung/android/settings/password/LockTypePolicy;->mContext:Landroid/content/Context;
+-
+-    invoke-static {v5}, Lcom/samsung/android/settings/knox/KnoxUtils;->isDualDarEnabled(Landroid/content/Context;)Z
++    sget-object v5, Lcom/samsung/android/settings/knox/KnoxUtils;->mDeviceType:Ljava/lang/String;
+ 
+-    move-result v5
++    const-string v5, "KnoxUtils"
+ 
+-    if-eqz v5, :cond_4c
++    const-string v10, "isDualDAREnabled result : false"
+ 
+-    const/16 v19, 0x1
+-
+-    aget v5, v26, v19
+-
+-    mul-int/2addr v11, v5
+-
+-    const/16 p1, 0x0
++    invoke-static {v5, v10}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
+ 
+     :cond_4c
+     iget-boolean v5, v3, Lcom/samsung/android/settings/password/LockTypePolicy;->mIsMultifactorAuthEnforced:Z
+@@ -9407,16 +9235,8 @@
+     move/from16 v5, p1
+ 
+     :goto_29
+-    if-eqz v10, :cond_4e
+-
+-    iget-boolean v3, v3, Lcom/samsung/android/settings/password/LockTypePolicy;->mIsDualDarDoUser:Z
+-
+-    if-eqz v3, :cond_4f
+-
+-    :cond_4e
+     if-eqz v12, :cond_3d
+ 
+-    :cond_4f
+     aget v3, v26, v16
+ 
+     goto/16 :goto_1f
+@@ -9486,21 +9306,17 @@
+ 
+     if-eqz v10, :cond_53
+ 
+-    iget-object v10, v3, Lcom/samsung/android/settings/password/LockTypePolicy;->mContext:Landroid/content/Context;
++    move/from16 v28, v5
+ 
+-    invoke-static {v10}, Lcom/samsung/android/settings/knox/KnoxUtils;->isDualDarEnabled(Landroid/content/Context;)Z
++    sget-object v10, Lcom/samsung/android/settings/knox/KnoxUtils;->mDeviceType:Ljava/lang/String;
+ 
+-    move-result v10
++    const-string v10, "KnoxUtils"
+ 
+-    if-eqz v10, :cond_53
++    const-string v5, "isDualDAREnabled result : false"
+ 
+-    const/16 v18, 0x2
++    invoke-static {v10, v5}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
+ 
+-    aget v5, v26, v18
+-
+-    mul-int/2addr v11, v5
+-
+-    const/4 v5, 0x0
++    move/from16 v5, v28
+ 
+     :cond_53
+     iget-boolean v10, v3, Lcom/samsung/android/settings/password/LockTypePolicy;->mIsMultifactorAuthEnforced:Z
+@@ -9514,16 +9330,8 @@
+     const/4 v5, 0x0
+ 
+     :cond_54
+-    if-eqz v20, :cond_55
+-
+-    iget-boolean v3, v3, Lcom/samsung/android/settings/password/LockTypePolicy;->mIsDualDarDoUser:Z
+-
+-    if-eqz v3, :cond_56
+-
+-    :cond_55
+     if-eqz v12, :cond_3d
+ 
+-    :cond_56
+     aget v3, v26, v21
+ 
+     goto/16 :goto_1f
+@@ -9643,9 +9451,7 @@
+ 
+     iget-object v3, v0, Lcom/android/settings/password/ChooseLockGeneric$ChooseLockGenericFragment;->mLockTypePolicy:Lcom/samsung/android/settings/password/LockTypePolicy;
+ 
+-    iget-boolean v3, v3, Lcom/samsung/android/settings/password/LockTypePolicy;->mIsDualDarDoUser:Z
+-
+-    if-nez v3, :cond_5d
++    invoke-virtual {v3}, Ljava/lang/Object;->getClass()Ljava/lang/Class;
+ 
+     invoke-virtual {v0}, Landroidx/fragment/app/Fragment;->getContext()Landroid/content/Context;
+ 
 diff --git a/smali_classes2/com/android/settings/password/ChooseLockPassword$ChooseLockPasswordFragment.smali b/smali_classes2/com/android/settings/password/ChooseLockPassword$ChooseLockPasswordFragment.smali
+index 745891c4..c58256aa 100644
 --- a/smali_classes2/com/android/settings/password/ChooseLockPassword$ChooseLockPasswordFragment.smali
 +++ b/smali_classes2/com/android/settings/password/ChooseLockPassword$ChooseLockPasswordFragment.smali
-@@ -2678,3 +2678 @@
+@@ -2675,12 +2675,6 @@
+     goto :goto_0
+ 
+     :cond_0
 -    invoke-static {}, Lcom/samsung/android/knox/dar/ddar/DualDarManager;->isOnDeviceOwnerEnabled()Z
 -
 -    move-result v3
-+    const/4 v3, 0x0
+-
+-    if-nez v3, :cond_1
+-
+     invoke-virtual {v0, v2}, Lcom/samsung/android/knox/devicesecurity/PasswordPolicy;->setPwdChangeRequested(I)Z
+ 
+     invoke-virtual {p0}, Lcom/android/settings/password/ChooseLockPassword$ChooseLockPasswordFragment;->isUcmChangePinEnabled()Z
+@@ -3009,15 +3003,7 @@
+ 
+     invoke-virtual {p0}, Landroidx/fragment/app/Fragment;->getActivity()Landroidx/fragment/app/FragmentActivity;
+ 
+-    move-result-object v0
+-
+-    iget v1, p0, Lcom/android/settings/password/ChooseLockPassword$ChooseLockPasswordFragment;->mUserId:I
+-
+-    invoke-static {v0, v1}, Lcom/samsung/android/settings/knox/KnoxUtils;->isDualDarDoInnerAuthUser(Landroid/content/Context;I)Z
+-
+-    move-result v0
+-
+-    if-nez v0, :cond_b
++    sget-object v0, Lcom/samsung/android/settings/knox/KnoxUtils;->mDeviceType:Ljava/lang/String;
+ 
+     iget-boolean v0, p0, Lcom/android/settings/password/ChooseLockPassword$ChooseLockPasswordFragment;->mFromPrevPassword:Z
+ 
+@@ -3365,20 +3351,10 @@
+ 
+     invoke-virtual {p0}, Landroidx/fragment/app/Fragment;->getActivity()Landroidx/fragment/app/FragmentActivity;
+ 
+-    move-result-object v0
+-
+-    iget v1, p0, Lcom/android/settings/password/ChooseLockPassword$ChooseLockPasswordFragment;->mUserId:I
+-
+-    invoke-static {v0, v1}, Lcom/samsung/android/settings/knox/KnoxUtils;->isDualDarDoInnerAuthUser(Landroid/content/Context;I)Z
+-
+-    move-result v0
++    sget-object v0, Lcom/samsung/android/settings/knox/KnoxUtils;->mDeviceType:Ljava/lang/String;
+ 
+     sget-object v1, Lcom/android/settings/password/ChooseLockPassword$ChooseLockPasswordFragment$ProfileType;->None:Lcom/android/settings/password/ChooseLockPassword$ChooseLockPasswordFragment$ProfileType;
+ 
+-    if-eqz v0, :cond_0
+-
+-    goto :goto_0
+-
+     :cond_0
+     invoke-virtual {p0}, Landroidx/fragment/app/Fragment;->getContext()Landroid/content/Context;
+ 
+@@ -3954,25 +3930,6 @@
+     :goto_3
+     if-eqz p1, :cond_10
+ 
+-    invoke-virtual {p0}, Landroidx/fragment/app/Fragment;->getActivity()Landroidx/fragment/app/FragmentActivity;
+-
+-    move-result-object v0
+-
+-    iget v1, p0, Lcom/android/settings/password/ChooseLockPassword$ChooseLockPasswordFragment;->mUserId:I
+-
+-    invoke-static {v0, v1}, Lcom/samsung/android/settings/knox/KnoxUtils;->isDualDarDoInnerAuthUser(Landroid/content/Context;I)Z
+-
+-    move-result v0
+-
+-    if-eqz v0, :cond_f
+-
+-    invoke-virtual {p1}, Lcom/samsung/android/knox/devicesecurity/PasswordPolicy;->isChangeRequestedForInner()I
+-
+-    move-result v2
+-
+-    goto :goto_4
+-
+-    :cond_f
+     invoke-virtual {p1}, Lcom/samsung/android/knox/devicesecurity/PasswordPolicy;->isChangeRequested()I
+ 
+     move-result v2
+@@ -6467,27 +6424,10 @@
+ 
+     if-nez v0, :cond_5
+ 
+-    invoke-virtual {p0}, Landroidx/fragment/app/Fragment;->getActivity()Landroidx/fragment/app/FragmentActivity;
+-
+-    move-result-object v0
+-
+-    iget v1, p0, Lcom/android/settings/password/ChooseLockPassword$ChooseLockPasswordFragment;->mUserId:I
+-
+-    invoke-static {v0, v1}, Lcom/samsung/android/settings/knox/KnoxUtils;->isDualDarDoInnerAuthUser(Landroid/content/Context;I)Z
+-
+-    move-result v0
+-
+     const/4 v1, 0x1
+ 
+     const/4 v2, 0x0
+ 
+-    if-eqz v0, :cond_0
+-
+-    move v0, v2
+-
+-    goto :goto_0
+-
+-    :cond_0
+     iget-boolean v0, p0, Lcom/android/settings/password/ChooseLockPassword$ChooseLockPasswordFragment;->mIsAlphaMode:Z
+ 
+     xor-int/2addr v0, v1
 diff --git a/smali_classes2/com/android/settings/password/ConfirmDeviceCredentialBaseFragment.smali b/smali_classes2/com/android/settings/password/ConfirmDeviceCredentialBaseFragment.smali
+index fcf08a0d..bc4d25d8 100644
 --- a/smali_classes2/com/android/settings/password/ConfirmDeviceCredentialBaseFragment.smali
 +++ b/smali_classes2/com/android/settings/password/ConfirmDeviceCredentialBaseFragment.smali
-@@ -668,3 +668 @@
+@@ -663,23 +663,7 @@
+     if-gtz v0, :cond_f
+ 
+     :cond_e
+-    sget-object v0, Lcom/samsung/android/settings/knox/KnoxUtils;->mDeviceType:Ljava/lang/String;
+-
 -    invoke-static {}, Lcom/samsung/android/knox/dar/ddar/DualDarManager;->isOnDeviceOwnerEnabled()Z
 -
 -    move-result v0
-+    const/4 v0, 0x0
+-
+-    if-eqz v0, :cond_10
+-
+-    invoke-virtual {v8}, Landroidx/fragment/app/Fragment;->getContext()Landroid/content/Context;
+-
+-    move-result-object v0
+-
+-    invoke-static {v0}, Lcom/samsung/android/settings/knox/KnoxUtils;->isChangeRequestedForInner(Landroid/content/Context;)I
+-
+-    move-result v0
+-
+-    if-lez v0, :cond_10
++    goto :cond_10
+ 
+     :cond_f
+     move v1, v2
 diff --git a/smali_classes2/com/android/settings/password/ConfirmLockPassword$ConfirmLockPasswordFragment.smali b/smali_classes2/com/android/settings/password/ConfirmLockPassword$ConfirmLockPasswordFragment.smali
+index cbe748ea..f0883d07 100644
 --- a/smali_classes2/com/android/settings/password/ConfirmLockPassword$ConfirmLockPasswordFragment.smali
 +++ b/smali_classes2/com/android/settings/password/ConfirmLockPassword$ConfirmLockPasswordFragment.smali
-@@ -575,3 +575 @@
+@@ -572,81 +572,6 @@
+ 
+     sget-object v0, Lcom/samsung/android/settings/knox/KnoxUtils;->mDeviceType:Ljava/lang/String;
+ 
 -    invoke-static {}, Lcom/samsung/android/knox/dar/ddar/DualDarManager;->isOnDeviceOwnerEnabled()Z
 -
 -    move-result v0
-+    const/4 v0, 0x0
-@@ -2710,3 +2708 @@
+-
+-    if-eqz v0, :cond_3
+-
+-    invoke-virtual {p0}, Landroidx/fragment/app/Fragment;->getContext()Landroid/content/Context;
+-
+-    move-result-object v0
+-
+-    iget v1, p0, Lcom/android/settings/password/ConfirmDeviceCredentialBaseFragment;->mUserId:I
+-
+-    invoke-static {v0, v1}, Lcom/samsung/android/settings/knox/KnoxUtils;->isChangeRequested(Landroid/content/Context;I)I
+-
+-    move-result v0
+-
+-    if-lez v0, :cond_1
+-
+-    iget v0, p0, Lcom/android/settings/password/ConfirmDeviceCredentialBaseFragment;->mUserId:I
+-
+-    if-nez v0, :cond_1
+-
+-    iget-boolean v0, p0, Lcom/android/settings/password/ConfirmLockPassword$ConfirmLockPasswordFragment;->mIsAlpha:Z
+-
+-    if-eqz v0, :cond_0
+-
+-    const v0, 0x7f150b11
+-
+-    invoke-virtual {p0, v0}, Landroidx/fragment/app/Fragment;->getString(I)Ljava/lang/String;
+-
+-    move-result-object p0
+-
+-    return-object p0
+-
+-    :cond_0
+-    const v0, 0x7f150b12
+-
+-    invoke-virtual {p0, v0}, Landroidx/fragment/app/Fragment;->getString(I)Ljava/lang/String;
+-
+-    move-result-object p0
+-
+-    return-object p0
+-
+-    :cond_1
+-    invoke-virtual {p0}, Landroidx/fragment/app/Fragment;->getContext()Landroid/content/Context;
+-
+-    move-result-object v0
+-
+-    invoke-static {v0}, Lcom/samsung/android/settings/knox/KnoxUtils;->isChangeRequestedForInner(Landroid/content/Context;)I
+-
+-    move-result v0
+-
+-    if-lez v0, :cond_3
+-
+-    iget-boolean v0, p0, Lcom/android/settings/password/ConfirmLockPassword$ConfirmLockPasswordFragment;->mIsAlpha:Z
+-
+-    if-eqz v0, :cond_2
+-
+-    const v0, 0x7f150b13
+-
+-    invoke-virtual {p0, v0}, Landroidx/fragment/app/Fragment;->getString(I)Ljava/lang/String;
+-
+-    move-result-object p0
+-
+-    return-object p0
+-
+-    :cond_2
+-    const v0, 0x7f150b14
+-
+-    invoke-virtual {p0, v0}, Landroidx/fragment/app/Fragment;->getString(I)Ljava/lang/String;
+-
+-    move-result-object p0
+-
+-    return-object p0
+-
+     :cond_3
+     iget-object v0, p0, Lcom/android/settings/password/ConfirmDeviceCredentialBaseFragment;->mKnoxConfirmDeviceCredentialBaseFragmentHelper:Lcom/samsung/android/settings/knox/KnoxConfirmDeviceCredentialBaseFragmentHelper;
+ 
+@@ -2707,33 +2632,8 @@
+     :goto_f
+     sget-object v1, Lcom/samsung/android/settings/knox/KnoxUtils;->mDeviceType:Ljava/lang/String;
+ 
 -    invoke-static {}, Lcom/samsung/android/knox/dar/ddar/DualDarManager;->isOnDeviceOwnerEnabled()Z
 -
 -    move-result v1
-+    const/4 v1, 0x0
+-
+-    if-eqz v1, :cond_27
+-
+-    invoke-virtual {p0}, Landroidx/fragment/app/Fragment;->getContext()Landroid/content/Context;
+-
+-    move-result-object v1
+-
+-    invoke-static {v1}, Lcom/samsung/android/settings/knox/KnoxUtils;->isChangeRequestedForInner(Landroid/content/Context;)I
+-
+-    move-result v1
+-
+-    if-lez v1, :cond_27
+-
+-    move v1, v3
+-
+-    goto :goto_10
+-
+-    :cond_27
+-    move v1, v4
+-
+     :goto_10
+-    if-nez v0, :cond_28
+-
+-    if-eqz v1, :cond_29
++    if-eqz v0, :cond_29
+ 
+     :cond_28
+     invoke-virtual {p2, p1}, Landroid/view/View;->findViewById(I)Landroid/view/View;
 diff --git a/smali_classes2/com/android/settings/password/ConfirmLockPassword.smali b/smali_classes2/com/android/settings/password/ConfirmLockPassword.smali
+index 4364ccda..efc73a12 100644
 --- a/smali_classes2/com/android/settings/password/ConfirmLockPassword.smali
 +++ b/smali_classes2/com/android/settings/password/ConfirmLockPassword.smali
-@@ -270,3 +270 @@
+@@ -132,11 +132,11 @@
+ 
+     const/4 v0, 0x0
+ 
+-    if-eqz p0, :cond_8
++    if-eqz p0, :cond_7
+ 
+     instance-of v1, p0, Lcom/android/settings/password/ConfirmLockPassword$ConfirmLockPasswordFragment;
+ 
+-    if-eqz v1, :cond_8
++    if-eqz v1, :cond_7
+ 
+     check-cast p0, Lcom/android/settings/password/ConfirmLockPassword$ConfirmLockPasswordFragment;
+ 
+@@ -150,7 +150,7 @@
+ 
+     const/4 v2, 0x1
+ 
+-    if-eqz v1, :cond_7
++    if-eqz v1, :cond_6
+ 
+     const v1, 0x7f1517c4
+ 
+@@ -267,38 +267,14 @@
+     :goto_3
+     sget-object v1, Lcom/samsung/android/settings/knox/KnoxUtils;->mDeviceType:Ljava/lang/String;
+ 
 -    invoke-static {}, Lcom/samsung/android/knox/dar/ddar/DualDarManager;->isOnDeviceOwnerEnabled()Z
 -
 -    move-result v1
-+    const/4 v1, 0x0
-@@ -382,3 +380 @@
+-
+-    if-eqz v1, :cond_5
+-
+-    invoke-virtual {p0}, Landroidx/fragment/app/Fragment;->getContext()Landroid/content/Context;
+-
+-    move-result-object v1
+-
+-    invoke-static {v1}, Lcom/samsung/android/settings/knox/KnoxUtils;->isChangeRequestedForInner(Landroid/content/Context;)I
+-
+-    move-result v1
+-
+-    if-lez v1, :cond_5
+-
+-    move v1, v2
++    if-nez p1, :cond_5
+ 
+     goto :goto_4
+ 
+     :cond_5
+-    move v1, v0
+-
+-    :goto_4
+-    if-nez p1, :cond_6
+-
+-    if-eqz v1, :cond_7
+-
+-    :cond_6
+     iget-object p0, p0, Lcom/android/settings/password/ConfirmLockPassword$ConfirmLockPasswordFragment;->mMenu:Landroid/view/Menu;
+ 
+-    if-eqz p0, :cond_7
++    if-eqz p0, :cond_6
+ 
+     invoke-interface {p0, v2}, Landroid/view/Menu;->findItem(I)Landroid/view/MenuItem;
+ 
+@@ -306,10 +282,11 @@
+ 
+     invoke-interface {p0, v0}, Landroid/view/MenuItem;->setEnabled(Z)Landroid/view/MenuItem;
+ 
+-    :cond_7
++    :cond_6
++    :goto_4
+     return v2
+ 
+-    :cond_8
++    :cond_7
+     return v0
+ .end method
+ 
+@@ -379,37 +356,8 @@
+     :goto_0
+     sget-object v5, Lcom/samsung/android/settings/knox/KnoxUtils;->mDeviceType:Ljava/lang/String;
+ 
 -    invoke-static {}, Lcom/samsung/android/knox/dar/ddar/DualDarManager;->isOnDeviceOwnerEnabled()Z
 -
 -    move-result v5
-+    const/4 v5, 0x0
+-
+-    if-eqz v5, :cond_2
+-
+-    invoke-virtual {v0}, Landroidx/fragment/app/Fragment;->getContext()Landroid/content/Context;
+-
+-    move-result-object v5
+-
+-    invoke-static {v5}, Lcom/samsung/android/settings/knox/KnoxUtils;->isChangeRequestedForInner(Landroid/content/Context;)I
+-
+-    move-result v5
+-
+-    if-lez v5, :cond_2
+-
+-    move v5, v4
+-
+-    goto :goto_1
+-
+-    :cond_2
+-    move v5, v3
+-
+-    :goto_1
+     if-nez v1, :cond_6
+ 
+-    if-eqz v5, :cond_3
+-
+-    goto :goto_3
+-
+-    :cond_3
+     :goto_2
+     invoke-interface {p1}, Landroid/view/MenuItem;->getItemId()I
+ 
 diff --git a/smali_classes2/com/android/settings/security/LockUnificationPreferenceController.smali b/smali_classes2/com/android/settings/security/LockUnificationPreferenceController.smali
+index 2d23efc1..83cc630b 100644
 --- a/smali_classes2/com/android/settings/security/LockUnificationPreferenceController.smali
 +++ b/smali_classes2/com/android/settings/security/LockUnificationPreferenceController.smali
-@@ -164,3 +164 @@
+@@ -161,12 +161,6 @@
+ 
+     if-eqz p0, :cond_0
+ 
 -    invoke-static {v0}, Lcom/samsung/android/knox/SemPersonaManager;->isDarDualEncryptionEnabled(I)Z
 -
 -    move-result p0
-+    const/4 p0, 0x0
+-
+-    if-nez p0, :cond_0
+-
+     const/4 p0, 0x1
+ 
+     return p0
 diff --git a/smali_classes4/com/samsung/android/knox/container/KnoxContainerManager.smali b/smali_classes4/com/samsung/android/knox/container/KnoxContainerManager.smali
+index be89c286..5235b784 100644
 --- a/smali_classes4/com/samsung/android/knox/container/KnoxContainerManager.smali
 +++ b/smali_classes4/com/samsung/android/knox/container/KnoxContainerManager.smali
-@@ -3470,38 +3469,0 @@
+@@ -3463,49 +3463,11 @@
+ .end method
+ 
+ .method public getDualDARPolicy()Lcom/samsung/android/knox/ddar/DualDARPolicy;
+-    .locals 2
+-
+-    iget-object v0, p0, Lcom/samsung/android/knox/container/KnoxContainerManager;->mDualDARPolicy:Lcom/samsung/android/knox/ddar/DualDARPolicy;
+-
 -    if-nez v0, :cond_1
 -
 -    monitor-enter p0
@@ -121,39 +1402,146 @@ diff --git a/smali_classes4/com/samsung/android/knox/container/KnoxContainerMana
 -    monitor-exit p0
 -    :try_end_0
 -    .catchall {:try_start_0 .. :try_end_0} :catchall_0
--
++    .locals 0
+ 
 -    throw v0
--
++    iget-object p0, p0, Lcom/samsung/android/knox/container/KnoxContainerManager;->mDualDARPolicy:Lcom/samsung/android/knox/ddar/DualDARPolicy;
+ 
 -    :cond_1
+-    return-object v0
++    return-object p0
+ .end method
+ 
+ .method public getEmailAccountPolicy()Lcom/samsung/android/knox/accounts/EmailAccountPolicy;
 diff --git a/smali_classes4/com/samsung/android/knox/ddar/DualDARPolicy.smali b/smali_classes4/com/samsung/android/knox/ddar/DualDARPolicy.smali
+index 83232882..c0763cd7 100644
 --- a/smali_classes4/com/samsung/android/knox/ddar/DualDARPolicy.smali
 +++ b/smali_classes4/com/samsung/android/knox/ddar/DualDARPolicy.smali
-@@ -101 +101 @@
+@@ -98,7 +98,7 @@
+ .method public static getDualDARVersion()Ljava/lang/String;
+     .locals 1
+ 
 -    const-string v0, "1.8.0"
 +    const/4 v0, 0x0
-@@ -134 +134 @@
+ 
+     return-object v0
+ .end method
+@@ -131,7 +131,7 @@
+ .method public static isDualDarSupportedForManagedDevice()Z
+     .locals 1
+ 
 -    const/4 v0, 0x1
 +    const/4 v0, 0x0
+ 
+     return v0
+ .end method
 diff --git a/smali_classes5/com/samsung/android/settings/deviceinfo/softwareinfo/KnoxVersionPreferenceController.smali b/smali_classes5/com/samsung/android/settings/deviceinfo/softwareinfo/KnoxVersionPreferenceController.smali
+index 75841fa6..0b7baf35 100644
 --- a/smali_classes5/com/samsung/android/settings/deviceinfo/softwareinfo/KnoxVersionPreferenceController.smali
 +++ b/smali_classes5/com/samsung/android/settings/deviceinfo/softwareinfo/KnoxVersionPreferenceController.smali
-@@ -361,3 +361 @@
+@@ -358,27 +358,11 @@
+ 
+     sget-object v7, Lcom/samsung/android/settings/knox/KnoxUtils;->mDeviceType:Ljava/lang/String;
+ 
 -    invoke-static {}, Lcom/samsung/android/knox/dar/ddar/DualDarManager;->isOnDeviceOwnerEnabled()Z
++    const-string v7, "KnoxUtils"
+ 
+-    move-result v7
+-
+-    const v8, 0x7f1526ee
+-
+-    if-eqz v7, :cond_3
+-
+-    invoke-virtual {v0, v2}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+-
+-    iget-object v7, p0, Lcom/android/settingslib/core/AbstractPreferenceController;->mContext:Landroid/content/Context;
+-
+-    invoke-virtual {v7}, Landroid/content/Context;->getResources()Landroid/content/res/Resources;
+-
+-    move-result-object v7
+-
+-    invoke-virtual {v7, v8}, Landroid/content/res/Resources;->getString(I)Ljava/lang/String;
+-
+-    move-result-object v7
++    const-string v8, "isDualDAREnabled result : false"
+ 
+-    invoke-virtual {v0, v7}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++    invoke-static {v7, v8}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
+ 
+     goto :goto_5
+ 
+@@ -387,52 +371,6 @@
+ 
+     goto :goto_6
+ 
+-    :cond_3
+-    iget-object v7, p0, Lcom/android/settingslib/core/AbstractPreferenceController;->mContext:Landroid/content/Context;
+-
+-    invoke-static {v7}, Lcom/samsung/android/settings/knox/KnoxUtils;->isDualDarEnabled(Landroid/content/Context;)Z
 -
 -    move-result v7
-+    const/4 v7, 0x0
+-
+-    if-eqz v7, :cond_4
+-
+-    invoke-virtual {v0, v2}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+-
+-    iget-object v7, p0, Lcom/android/settingslib/core/AbstractPreferenceController;->mContext:Landroid/content/Context;
+-
+-    invoke-virtual {v7}, Landroid/content/Context;->getResources()Landroid/content/res/Resources;
+-
+-    move-result-object v7
+-
+-    invoke-virtual {v7, v8}, Landroid/content/res/Resources;->getString(I)Ljava/lang/String;
+-
+-    move-result-object v7
+-
+-    invoke-virtual {v0, v7}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+-
+-    const-string v7, " ("
+-
+-    invoke-virtual {v0, v7}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+-
+-    iget-object v7, p0, Lcom/android/settingslib/core/AbstractPreferenceController;->mContext:Landroid/content/Context;
+-
+-    invoke-virtual {v7}, Landroid/content/Context;->getResources()Landroid/content/res/Resources;
+-
+-    move-result-object v7
+-
+-    const v8, 0x7f152c8f
+-
+-    invoke-virtual {v7, v8}, Landroid/content/res/Resources;->getString(I)Ljava/lang/String;
+-
+-    move-result-object v7
+-
+-    invoke-virtual {v0, v7}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+-
+-    const-string v7, ")"
+-
+-    invoke-virtual {v0, v7}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+-
+-    :cond_4
+     :goto_5
+     new-instance v7, Ljava/lang/StringBuilder;
+ 
 diff --git a/smali_classes5/com/samsung/android/settings/knox/KnoxUtils.smali b/smali_classes5/com/samsung/android/settings/knox/KnoxUtils.smali
+index 33e343e9..52747198 100644
 --- a/smali_classes5/com/samsung/android/settings/knox/KnoxUtils.smali
 +++ b/smali_classes5/com/samsung/android/settings/knox/KnoxUtils.smali
-@@ -1907,6 +1906,0 @@
+@@ -1901,34 +1901,7 @@
+     return p0
+ .end method
+ 
+-.method public static getDualDarDoInnerAuthUserId(Landroid/content/Context;)I
+-    .locals 1
+-
 -    invoke-static {}, Lcom/samsung/android/knox/dar/ddar/DualDarManager;->isOnDeviceOwnerEnabled()Z
 -
 -    move-result v0
 -
 -    if-nez v0, :cond_0
 -
-@@ -1914,15 +1907,0 @@
--
+-    const/4 p0, -0x1
+ 
 -    return p0
 -
 -    :cond_0
@@ -168,7 +1556,233 @@ diff --git a/smali_classes5/com/samsung/android/settings/knox/KnoxUtils.smali b/
 -    invoke-virtual {p0}, Lcom/android/internal/widget/LockPatternUtils$LockPatternUtilForDualDarDo;->getInnerAuthUserForDo()I
 -
 -    move-result p0
-@@ -3090,19 +3068,0 @@
+-
+-    return p0
+-.end method
+ 
+ .method public static getInflatedLayoutType(Landroid/content/Context;)I
+     .locals 2
+@@ -2138,52 +2111,7 @@
+     return-object p0
+ .end method
+ 
+-.method public static getPasswordType(I)I
+-    .locals 1
+-
+-    const/high16 v0, 0x10000
+-
+-    if-eq p0, v0, :cond_2
+-
+-    const/high16 v0, 0x20000
+-
+-    if-eq p0, v0, :cond_1
+-
+-    const/high16 v0, 0x30000
+-
+-    if-eq p0, v0, :cond_1
+-
+-    const/high16 v0, 0x40000
+ 
+-    if-eq p0, v0, :cond_0
+-
+-    const/high16 v0, 0x50000
+-
+-    if-eq p0, v0, :cond_0
+-
+-    const/high16 v0, 0x60000
+-
+-    if-eq p0, v0, :cond_0
+-
+-    const/4 p0, 0x1
+-
+-    return p0
+-
+-    :cond_0
+-    const/4 p0, 0x4
+-
+-    return p0
+-
+-    :cond_1
+-    const/4 p0, 0x3
+-
+-    return p0
+-
+-    :cond_2
+-    const/4 p0, 0x2
+-
+-    return p0
+-.end method
+ 
+ .method public static getSAccountLock(Landroid/content/Context;I)Z
+     .locals 4
+@@ -2660,7 +2588,7 @@
+ .end method
+ 
+ .method public static insertStatusLogForKnox(Landroid/content/Context;II)V
+-    .locals 6
++    .locals 3
+ 
+     new-instance v0, Ljava/lang/StringBuilder;
+ 
+@@ -2682,7 +2610,7 @@
+ 
+     move-result v0
+ 
+-    if-nez v0, :cond_5
++    if-nez v0, :cond_1
+ 
+     invoke-static {p1}, Lcom/samsung/android/knox/SemPersonaManager;->isKnoxId(I)Z
+ 
+@@ -2696,114 +2624,26 @@
+ 
+     if-nez v0, :cond_0
+ 
+-    goto/16 :goto_0
++    goto :goto_0
+ 
+     :cond_0
+-    invoke-static {p0}, Lcom/samsung/android/settings/knox/KnoxUtils;->isDualDarEnabled(Landroid/content/Context;)Z
+-
+-    move-result v0
+-
+-    const/4 v2, 0x0
+-
+-    if-eqz v0, :cond_4
+-
+-    new-instance v0, Ljava/lang/StringBuilder;
+-
+-    const-string v1, "DualDAR Auth Type change request received for, UserID: "
+-
+-    invoke-direct {v0, v1}, Ljava/lang/StringBuilder;-><init>(Ljava/lang/String;)V
+-
+-    invoke-virtual {v0, p1}, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
+-
+-    const-string v1, ", event: CHANGE_LOCK_TYPE, locktype: "
+-
+-    invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+-
+-    invoke-virtual {v0, p2}, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
+-
+-    invoke-virtual {v0}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+-
+-    move-result-object v0
+-
+-    const-string v1, "KnoxUtils:DualDARAnalytics"
++    const-string v0, "isDualDAREnabled result : false"
+ 
+     invoke-static {v1, v0}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
+ 
+-    new-instance v0, Lcom/android/internal/widget/LockPatternUtils;
+-
+-    invoke-direct {v0, p0}, Lcom/android/internal/widget/LockPatternUtils;-><init>(Landroid/content/Context;)V
+-
+-    const/4 v1, 0x1
+-
+-    invoke-virtual {v0, v1, p1}, Lcom/android/internal/widget/LockPatternUtils;->getBiometricState(II)I
+-
+-    move-result v3
+-
+-    const/16 v4, 0x100
+-
+-    invoke-virtual {v0, v4, p1}, Lcom/android/internal/widget/LockPatternUtils;->getBiometricState(II)I
+-
+-    move-result v4
+-
+-    shl-int/lit8 v4, v4, 0x2
+-
+-    invoke-virtual {p0}, Landroid/content/Context;->getContentResolver()Landroid/content/ContentResolver;
+-
+-    move-result-object p0
+-
+-    const-string v5, "knox_finger_print_plus"
+-
+-    invoke-static {p0, v5, v2, p1}, Landroid/provider/Settings$System;->getIntForUser(Landroid/content/ContentResolver;Ljava/lang/String;II)I
+-
+-    move-result p0
+-
+-    if-ne p0, v1, :cond_1
+-
+-    move v2, v1
+-
+-    :cond_1
+-    or-int p0, v3, v4
+-
+-    if-nez p2, :cond_2
+-
+-    invoke-virtual {v0, p1}, Lcom/android/internal/widget/LockPatternUtils;->getActivePasswordQuality(I)I
+-
+-    move-result p2
+-
+-    invoke-static {p2}, Lcom/samsung/android/settings/knox/KnoxUtils;->getPasswordType(I)I
+-
+-    move-result p2
+-
+-    :cond_2
+-    if-nez p1, :cond_3
+-
+-    const-string p1, "DEVICE_AUTH_TYPE"
+-
+-    invoke-static {p1, p2, p0, v2}, Lcom/samsung/android/settings/knox/KnoxUtils;->insertLocktypeDataForDualDar(Ljava/lang/String;IIZ)V
+-
+-    return-void
+-
+-    :cond_3
+-    const-string p1, "DAR_AUTH_TYPE"
+-
+-    invoke-static {p1, p2, p0, v2}, Lcom/samsung/android/settings/knox/KnoxUtils;->insertLocktypeDataForDualDar(Ljava/lang/String;IIZ)V
+-
+-    return-void
+-
+-    :cond_4
+     new-instance v0, Landroid/content/Intent;
+ 
+-    const-string/jumbo v3, "samsung.knox.intent.action.CHANGE_LOCK_TYPE"
++    const-string/jumbo v2, "samsung.knox.intent.action.CHANGE_LOCK_TYPE"
+ 
+-    invoke-direct {v0, v3}, Landroid/content/Intent;-><init>(Ljava/lang/String;)V
++    invoke-direct {v0, v2}, Landroid/content/Intent;-><init>(Ljava/lang/String;)V
+ 
+-    const/high16 v3, 0x50000000
++    const/high16 v2, 0x50000000
+ 
+-    invoke-virtual {v0, v3}, Landroid/content/Intent;->addFlags(I)Landroid/content/Intent;
++    invoke-virtual {v0, v2}, Landroid/content/Intent;->addFlags(I)Landroid/content/Intent;
+ 
+-    const-string v3, "android.intent.extra.user_handle"
++    const-string v2, "android.intent.extra.user_handle"
+ 
+-    invoke-virtual {v0, v3, p1}, Landroid/content/Intent;->putExtra(Ljava/lang/String;I)Landroid/content/Intent;
++    invoke-virtual {v0, v2, p1}, Landroid/content/Intent;->putExtra(Ljava/lang/String;I)Landroid/content/Intent;
+ 
+     const-string p1, "lckTp"
+ 
+@@ -2811,7 +2651,9 @@
+ 
+     new-instance p1, Landroid/os/UserHandle;
+ 
+-    invoke-direct {p1, v2}, Landroid/os/UserHandle;-><init>(I)V
++    const/4 p2, 0x0
++
++    invoke-direct {p1, p2}, Landroid/os/UserHandle;-><init>(I)V
+ 
+     invoke-virtual {p0, v0, p1}, Landroid/content/Context;->sendBroadcastAsUser(Landroid/content/Intent;Landroid/os/UserHandle;)V
+ 
+@@ -2821,7 +2663,7 @@
+ 
+     return-void
+ 
+-    :cond_5
++    :cond_1
+     :goto_0
+     const-string p0, "insertLog() is failed : SecureFolder user"
+ 
+@@ -3084,124 +2926,11 @@
+     return p0
+ .end method
+ 
+-.method public static isChangeRequestedForInner(Landroid/content/Context;)I
+-    .locals 0
+-
 -    invoke-static {p0}, Lcom/samsung/android/knox/EnterpriseDeviceManager;->getInstance(Landroid/content/Context;)Lcom/samsung/android/knox/EnterpriseDeviceManager;
 -
 -    move-result-object p0
@@ -188,14 +1802,21 @@ diff --git a/smali_classes5/com/samsung/android/settings/knox/KnoxUtils.smali b/
 -    return p0
 -
 -    :cond_0
-@@ -3117,6 +3076,0 @@
+-    const/4 p0, 0x0
+-
+-    return p0
+-.end method
+-
+-.method public static isDualDarDoInnerAuthUser(Landroid/content/Context;I)Z
+-    .locals 1
+-
 -    invoke-static {}, Lcom/samsung/android/knox/dar/ddar/DualDarManager;->isOnDeviceOwnerEnabled()Z
 -
 -    move-result v0
 -
 -    if-nez v0, :cond_0
 -
-@@ -3124,15 +3077,0 @@
+-    const/4 p0, 0x0
 -
 -    return p0
 -
@@ -211,7 +1832,13 @@ diff --git a/smali_classes5/com/samsung/android/settings/knox/KnoxUtils.smali b/
 -    invoke-virtual {p0, p1}, Lcom/android/internal/widget/LockPatternUtils$LockPatternUtilForDualDarDo;->isInnerAuthUserForDo(I)Z
 -
 -    move-result p0
-@@ -3146,58 +3085,3 @@
+-
+-    return p0
+-.end method
+-
+-.method public static isDualDarEnabled(Landroid/content/Context;)Z
+-    .locals 2
+-
 -    invoke-static {p0}, Landroid/os/UserManager;->get(Landroid/content/Context;)Landroid/os/UserManager;
 -
 -    move-result-object p0
@@ -255,60 +1882,807 @@ diff --git a/smali_classes5/com/samsung/android/settings/knox/KnoxUtils.smali b/
 -
 -    :cond_1
 -    const-string p0, "KnoxUtils"
--
+ 
 -    const-string v1, "isDualDAREnabled result : "
--
+ 
 -    invoke-static {v1, p0, v0}, Lcom/android/settings/AirplaneModeEnabler$$ExternalSyntheticOutline0;->m(Ljava/lang/String;Ljava/lang/String;Z)V
 -
 -    return v0
 -
 -    :cond_2
 -    new-instance p0, Ljava/lang/IllegalStateException;
--
+ 
 -    const-string v0, "Unable to load UserManager"
--
+ 
 -    invoke-direct {p0, v0}, Ljava/lang/IllegalStateException;-><init>(Ljava/lang/String;)V
--
+ 
 -    throw p0
+-.end method
+ 
+ .method public static isFaceEnabled(Landroid/content/Context;I)Z
+     .locals 4
+@@ -3650,24 +3379,13 @@
+ .end method
+ 
+ .method public static isMultifactorAuthEnforced(Landroid/content/Context;I)Z
+-    .locals 2
+-
+-    invoke-static {p0, p1}, Lcom/samsung/android/settings/knox/KnoxUtils;->isDualDarDoInnerAuthUser(Landroid/content/Context;I)Z
+-
+-    move-result v0
+-
+-    const/4 v1, 0x0
+-
+-    if-eqz v0, :cond_0
+-
+-    return v1
++    .locals 0
+ 
+-    :cond_0
+     invoke-static {p0, p1}, Lcom/samsung/android/settings/knox/KnoxUtils;->getPasswordPolicy(Landroid/content/Context;I)Lcom/samsung/android/knox/devicesecurity/PasswordPolicy;
+ 
+     move-result-object p0
+ 
+-    if-eqz p0, :cond_1
++    if-eqz p0, :cond_0
+ 
+     invoke-virtual {p0}, Lcom/samsung/android/knox/devicesecurity/PasswordPolicy;->isMultifactorAuthenticationEnabled()Z
+ 
+@@ -3675,8 +3393,10 @@
+ 
+     return p0
+ 
+-    :cond_1
+-    return v1
++    :cond_0
 +    const/4 p0, 0x0
 +
 +    return p0
+ .end method
+ 
+ .method public static isMultifactorEnabledForWork(Landroid/content/Context;I)Z
 diff --git a/smali_classes5/com/samsung/android/settings/lockscreen/LockScreenSettings.smali b/smali_classes5/com/samsung/android/settings/lockscreen/LockScreenSettings.smali
+index db7ebf8a..4cc6624a 100644
 --- a/smali_classes5/com/samsung/android/settings/lockscreen/LockScreenSettings.smali
 +++ b/smali_classes5/com/samsung/android/settings/lockscreen/LockScreenSettings.smali
-@@ -72,3 +72 @@
+@@ -18,7 +18,7 @@
+ 
+ .field public mEditorLunarCalendar:Landroidx/preference/SecSwitchPreference;
+ 
+-.field public final mIsDualDarDoEnabled:Z
++
+ 
+ .field public mLockPatternUtils:Lcom/android/internal/widget/LockPatternUtils;
+ 
+@@ -69,12 +69,6 @@
+ 
+     sget-object v0, Lcom/samsung/android/settings/knox/KnoxUtils;->mDeviceType:Ljava/lang/String;
+ 
 -    invoke-static {}, Lcom/samsung/android/knox/dar/ddar/DualDarManager;->isOnDeviceOwnerEnabled()Z
 -
 -    move-result v0
-+    const/4 v0, 0x0
+-
+-    iput-boolean v0, p0, Lcom/samsung/android/settings/lockscreen/LockScreenSettings;->mIsDualDarDoEnabled:Z
+-
+     return-void
+ .end method
+ 
+@@ -153,20 +147,6 @@
+ 
+     invoke-static {p1}, Lcom/android/settingslib/utils/ThreadUtils;->postOnMainThread(Ljava/lang/Runnable;)V
+ 
+-    iget-boolean p1, p0, Lcom/samsung/android/settings/lockscreen/LockScreenSettings;->mIsDualDarDoEnabled:Z
+-
+-    if-eqz p1, :cond_2
+-
+-    const-class p1, Lcom/samsung/android/settings/lockscreen/controller/DualDarDoScreenLockTypePreferenceController;
+-
+-    invoke-virtual {p0, p1}, Lcom/android/settings/dashboard/DashboardFragment;->use(Ljava/lang/Class;)Lcom/android/settingslib/core/AbstractPreferenceController;
+-
+-    move-result-object p0
+-
+-    check-cast p0, Lcom/samsung/android/settings/lockscreen/controller/DualDarDoScreenLockTypePreferenceController;
+-
+-    invoke-virtual {p0}, Lcom/samsung/android/settings/lockscreen/controller/DualDarDoScreenLockTypePreferenceController;->updatePreference()V
+-
+     return-void
+ 
+     :cond_0
+@@ -225,24 +205,6 @@
+     check-cast p1, Lcom/samsung/android/settings/lockscreen/controller/ScreenLockTypePreferenceController;
+ 
+     invoke-virtual {p1, p0}, Lcom/samsung/android/settings/lockscreen/controller/ScreenLockTypePreferenceController;->init(Landroidx/fragment/app/Fragment;)V
+-
+-    iget-boolean p1, p0, Lcom/samsung/android/settings/lockscreen/LockScreenSettings;->mIsDualDarDoEnabled:Z
+-
+-    if-eqz p1, :cond_0
+-
+-    const-class p1, Lcom/samsung/android/settings/lockscreen/controller/DualDarDoScreenLockTypePreferenceController;
+-
+-    invoke-virtual {p0, p1}, Lcom/android/settings/dashboard/DashboardFragment;->use(Ljava/lang/Class;)Lcom/android/settingslib/core/AbstractPreferenceController;
+-
+-    move-result-object p1
+-
+-    check-cast p1, Lcom/samsung/android/settings/lockscreen/controller/DualDarDoScreenLockTypePreferenceController;
+-
+-    const/16 v0, 0x7b
+-
+-    invoke-virtual {p1, p0, v0}, Lcom/samsung/android/settings/lockscreen/controller/DualDarDoScreenLockTypePreferenceController;->init(Landroidx/fragment/app/Fragment;I)V
+-
+-    :cond_0
+     const-class p1, Lcom/samsung/android/settings/lockscreen/controller/SecureLockPreferenceController;
+ 
+     invoke-virtual {p0, p1}, Lcom/android/settings/dashboard/DashboardFragment;->use(Ljava/lang/Class;)Lcom/android/settingslib/core/AbstractPreferenceController;
 diff --git a/smali_classes5/com/samsung/android/settings/lockscreen/LockUtils.smali b/smali_classes5/com/samsung/android/settings/lockscreen/LockUtils.smali
+index b0588d75..4cb39feb 100644
 --- a/smali_classes5/com/samsung/android/settings/lockscreen/LockUtils.smali
 +++ b/smali_classes5/com/samsung/android/settings/lockscreen/LockUtils.smali
-@@ -1910,3 +1910 @@
+@@ -1898,159 +1898,111 @@
+ .method public static updateSetUpCredentialIfNeeded(Landroid/content/Context;I)V
+     .locals 7
+ 
+-    const-string v0, "KNOX Analytics Logging Event for Auth change : P/P/P Type= "
++    const-string v0, "LockUtils"
++
++    const-string v1, "KNOX Analytics Logging Event for Auth change : P/P/P Type= "
+ 
+     if-nez p0, :cond_0
+ 
+-    goto/16 :goto_3
++    goto/16 :goto_4
+ 
+     :cond_0
+-    sget-object v1, Lcom/samsung/android/settings/knox/KnoxUtils;->mDeviceType:Ljava/lang/String;
+-
 -    invoke-static {}, Lcom/samsung/android/knox/dar/ddar/DualDarManager;->isOnDeviceOwnerEnabled()Z
 -
 -    move-result v1
-+    const/4 v1, 0x0
-@@ -2090,3 +2088 @@
+-
+-    const-string v2, "LockUtils"
+-
+-    const/4 v3, 0x0
+-
+-    if-eqz v1, :cond_2
+-
+-    invoke-static {p0, p1}, Lcom/samsung/android/settings/knox/KnoxUtils;->isDualDarDoInnerAuthUser(Landroid/content/Context;I)Z
+-
+-    move-result v1
+-
+-    if-eqz v1, :cond_2
+-
+-    invoke-static {p0}, Lcom/samsung/android/settings/knox/KnoxUtils;->isChangeRequestedForInner(Landroid/content/Context;)I
+-
+-    move-result p1
+-
+-    if-lez p1, :cond_a
++    sget-object v2, Lcom/samsung/android/settings/knox/KnoxUtils;->mDeviceType:Ljava/lang/String;
+ 
+-    const-string p1, "Setting password change requested inner"
+-
+-    invoke-static {v2, p1}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;)I
+-
+-    invoke-static {p0, v3}, Lcom/samsung/android/settings/knox/KnoxUtils;->getPasswordPolicy(Landroid/content/Context;I)Lcom/samsung/android/knox/devicesecurity/PasswordPolicy;
+-
+-    move-result-object p1
+-
+-    if-eqz p1, :cond_1
+-
+-    invoke-virtual {p1, v3}, Lcom/samsung/android/knox/devicesecurity/PasswordPolicy;->setPwdChangeRequested(I)Z
+-
+-    :cond_1
+-    invoke-static {p0}, Lcom/samsung/android/knox/EnterpriseDeviceManager;->getInstance(Landroid/content/Context;)Lcom/samsung/android/knox/EnterpriseDeviceManager;
+-
+-    move-result-object p0
+-
+-    if-eqz p0, :cond_a
+-
+-    invoke-virtual {p0}, Lcom/samsung/android/knox/EnterpriseDeviceManager;->getPasswordPolicy()Lcom/samsung/android/knox/devicesecurity/PasswordPolicy;
+-
+-    move-result-object p0
+-
+-    if-eqz p0, :cond_a
+-
+-    invoke-virtual {p0, v3}, Lcom/samsung/android/knox/devicesecurity/PasswordPolicy;->setPwdChangeRequestedForInner(I)Z
+-
+-    return-void
+-
+-    :cond_2
+     invoke-virtual {p0}, Landroid/content/Context;->getContentResolver()Landroid/content/ContentResolver;
+ 
+-    move-result-object v1
++    move-result-object v2
+ 
+-    const-string v4, "enable_one_lock_ongoing"
++    const-string v3, "enable_one_lock_ongoing"
+ 
+-    invoke-static {v1, v4, v3}, Landroid/provider/Settings$System;->putInt(Landroid/content/ContentResolver;Ljava/lang/String;I)Z
++    const/4 v4, 0x0
++
++    invoke-static {v2, v3, v4}, Landroid/provider/Settings$System;->putInt(Landroid/content/ContentResolver;Ljava/lang/String;I)Z
+ 
+     invoke-static {p1}, Lcom/samsung/android/knox/SemPersonaManager;->isKnoxId(I)Z
+ 
+-    move-result v1
++    move-result v2
+ 
+-    if-nez v1, :cond_4
++    if-nez v2, :cond_2
+ 
+     invoke-static {p0, p1}, Lcom/samsung/android/settings/knox/KnoxUtils;->isKnoxOrganizationOwnedDevice(Landroid/content/Context;I)Z
+ 
+-    move-result v1
++    move-result v2
+ 
+-    if-nez v1, :cond_4
++    if-nez v2, :cond_2
+ 
+     invoke-static {p0}, Lcom/samsung/android/knox/EnterpriseDeviceManager;->getInstance(Landroid/content/Context;)Lcom/samsung/android/knox/EnterpriseDeviceManager;
+ 
+-    move-result-object v1
++    move-result-object v2
+ 
+-    if-eqz v1, :cond_3
++    if-eqz v2, :cond_1
+ 
+-    invoke-virtual {v1}, Lcom/samsung/android/knox/EnterpriseDeviceManager;->isMdmAdminPresent()Z
++    invoke-virtual {v2}, Lcom/samsung/android/knox/EnterpriseDeviceManager;->isMdmAdminPresent()Z
+ 
+-    move-result v1
++    move-result v2
+ 
+     goto :goto_0
+ 
+-    :cond_3
+-    move v1, v3
++    :cond_1
++    move v2, v4
+ 
+     :goto_0
+-    if-nez p1, :cond_a
++    if-nez p1, :cond_b
+ 
+-    if-eqz v1, :cond_a
++    if-eqz v2, :cond_b
+ 
+-    :cond_4
++    :cond_2
+     :try_start_0
+     invoke-static {p1}, Lcom/samsung/android/knox/SemPersonaManager;->getAdminComponentName(I)Landroid/content/ComponentName;
+ 
+-    move-result-object v1
++    move-result-object v2
+ 
+-    invoke-virtual {v1}, Landroid/content/ComponentName;->getPackageName()Ljava/lang/String;
++    invoke-virtual {v2}, Landroid/content/ComponentName;->getPackageName()Ljava/lang/String;
+ 
+-    move-result-object v1
++    move-result-object v2
+ 
+     invoke-virtual {p0}, Landroid/content/Context;->getPackageManager()Landroid/content/pm/PackageManager;
+ 
+-    move-result-object v4
++    move-result-object v3
+ 
+-    invoke-virtual {v4, v1, p1}, Landroid/content/pm/PackageManager;->getPackageUidAsUser(Ljava/lang/String;I)I
++    invoke-virtual {v3, v2, p1}, Landroid/content/pm/PackageManager;->getPackageUidAsUser(Ljava/lang/String;I)I
+ 
+-    move-result v1
++    move-result v2
+     :try_end_0
+     .catch Ljava/lang/Exception; {:try_start_0 .. :try_end_0} :catch_0
+ 
+     goto :goto_1
+ 
+     :catch_0
+-    move-exception v1
++    move-exception v2
+ 
+-    new-instance v4, Ljava/lang/StringBuilder;
++    new-instance v3, Ljava/lang/StringBuilder;
+ 
+     const-string v5, "Error fetching admin uid "
+ 
+-    invoke-direct {v4, v5}, Ljava/lang/StringBuilder;-><init>(Ljava/lang/String;)V
++    invoke-direct {v3, v5}, Ljava/lang/StringBuilder;-><init>(Ljava/lang/String;)V
+ 
+-    invoke-static {v1, v4, v2}, Lcom/android/settings/applications/manageapplications/CloneBackend$$ExternalSyntheticOutline0;->m(Ljava/lang/Exception;Ljava/lang/StringBuilder;Ljava/lang/String;)V
++    invoke-static {v2, v3, v0}, Lcom/android/settings/applications/manageapplications/CloneBackend$$ExternalSyntheticOutline0;->m(Ljava/lang/Exception;Ljava/lang/StringBuilder;Ljava/lang/String;)V
+ 
+-    move v1, p1
++    move v2, p1
+ 
+     :goto_1
+     invoke-static {p0}, Landroid/os/UserManager;->get(Landroid/content/Context;)Landroid/os/UserManager;
+ 
+-    move-result-object v4
++    move-result-object v3
+ 
+-    if-eqz v4, :cond_b
++    if-eqz v3, :cond_c
+ 
+-    invoke-virtual {v4, p1}, Landroid/os/UserManager;->getUserInfo(I)Landroid/content/pm/UserInfo;
++    invoke-virtual {v3, p1}, Landroid/os/UserManager;->getUserInfo(I)Landroid/content/pm/UserInfo;
+ 
+-    move-result-object v4
++    move-result-object v3
+ 
+     :try_start_1
+     invoke-static {p1}, Lcom/samsung/android/knox/SemPersonaManager;->isKnoxId(I)Z
+ 
+     move-result v5
+ 
+-    if-eqz v5, :cond_5
++    if-eqz v5, :cond_3
+ 
+     invoke-static {}, Lcom/samsung/android/knox/EnterpriseKnoxManager;->getInstance()Lcom/samsung/android/knox/EnterpriseKnoxManager;
+ 
+@@ -2058,130 +2010,162 @@
+ 
+     new-instance v6, Lcom/samsung/android/knox/ContextInfo;
+ 
+-    invoke-direct {v6, v1, p1}, Lcom/samsung/android/knox/ContextInfo;-><init>(II)V
++    invoke-direct {v6, v2, p1}, Lcom/samsung/android/knox/ContextInfo;-><init>(II)V
+ 
+     invoke-virtual {v5, p0, v6}, Lcom/samsung/android/knox/EnterpriseKnoxManager;->getKnoxContainerManager(Landroid/content/Context;Lcom/samsung/android/knox/ContextInfo;)Lcom/samsung/android/knox/container/KnoxContainerManager;
+ 
+-    move-result-object v1
++    move-result-object v2
+ 
+-    invoke-virtual {v1}, Lcom/samsung/android/knox/container/KnoxContainerManager;->getPasswordPolicy()Lcom/samsung/android/knox/devicesecurity/PasswordPolicy;
++    invoke-virtual {v2}, Lcom/samsung/android/knox/container/KnoxContainerManager;->getPasswordPolicy()Lcom/samsung/android/knox/devicesecurity/PasswordPolicy;
+ 
+-    move-result-object v1
++    move-result-object v2
+ 
+     goto :goto_2
+ 
+-    :cond_5
++    :cond_3
+     invoke-static {p0}, Lcom/samsung/android/knox/EnterpriseDeviceManager;->getInstance(Landroid/content/Context;)Lcom/samsung/android/knox/EnterpriseDeviceManager;
+ 
+-    move-result-object v1
++    move-result-object v2
+ 
+-    if-eqz v1, :cond_6
++    if-eqz v2, :cond_4
+ 
+-    invoke-virtual {v1}, Lcom/samsung/android/knox/EnterpriseDeviceManager;->getPasswordPolicy()Lcom/samsung/android/knox/devicesecurity/PasswordPolicy;
++    invoke-virtual {v2}, Lcom/samsung/android/knox/EnterpriseDeviceManager;->getPasswordPolicy()Lcom/samsung/android/knox/devicesecurity/PasswordPolicy;
+ 
+-    move-result-object v1
++    move-result-object v2
+ 
+     goto :goto_2
+ 
+-    :cond_6
+-    const/4 v1, 0x0
++    :cond_4
++    const/4 v2, 0x0
+ 
+     :goto_2
 -    invoke-static {}, Lcom/samsung/android/knox/dar/ddar/DualDarManager;->isOnDeviceOwnerEnabled()Z
 -
 -    move-result v5
-+    const/4 v5, 0x0
++    sget-object v5, Lcom/samsung/android/settings/knox/KnoxUtils;->mDeviceType:Ljava/lang/String;
+ 
+-    if-nez v5, :cond_7
++    if-eqz v2, :cond_5
+ 
+-    if-eqz v1, :cond_7
+-
+-    invoke-virtual {v1}, Lcom/samsung/android/knox/devicesecurity/PasswordPolicy;->isChangeRequested()I
++    invoke-virtual {v2}, Lcom/samsung/android/knox/devicesecurity/PasswordPolicy;->isChangeRequested()I
+ 
+     move-result v5
+ 
+-    if-lez v5, :cond_7
++    if-lez v5, :cond_5
+ 
+     const-string v5, "Setting password change requested"
+ 
+-    invoke-static {v2, v5}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;)I
++    invoke-static {v0, v5}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;)I
+ 
+-    invoke-virtual {v1, v3}, Lcom/samsung/android/knox/devicesecurity/PasswordPolicy;->setPwdChangeRequested(I)Z
++    invoke-virtual {v2, v4}, Lcom/samsung/android/knox/devicesecurity/PasswordPolicy;->setPwdChangeRequested(I)Z
+ 
+-    :cond_7
+-    invoke-virtual {v4}, Landroid/content/pm/UserInfo;->needSetupCredential()Z
++    :cond_5
++    invoke-virtual {v3}, Landroid/content/pm/UserInfo;->needSetupCredential()Z
+ 
+-    move-result v1
++    move-result v2
+ 
+-    if-eqz v1, :cond_8
++    if-eqz v2, :cond_6
+ 
+-    const/high16 v1, 0x20000000
++    const/high16 v2, 0x20000000
+ 
+-    invoke-static {p1, v1}, Lcom/samsung/android/knox/SemPersonaManager;->clearAttributes(II)Z
++    invoke-static {p1, v2}, Lcom/samsung/android/knox/SemPersonaManager;->clearAttributes(II)Z
+ 
+-    :cond_8
+-    new-instance v1, Lcom/android/internal/widget/LockPatternUtils;
++    :cond_6
++    new-instance v2, Lcom/android/internal/widget/LockPatternUtils;
+ 
+-    invoke-direct {v1, p0}, Lcom/android/internal/widget/LockPatternUtils;-><init>(Landroid/content/Context;)V
++    invoke-direct {v2, p0}, Lcom/android/internal/widget/LockPatternUtils;-><init>(Landroid/content/Context;)V
+ 
+-    const-string v4, "keyguard"
++    const-string v3, "keyguard"
+ 
+-    invoke-virtual {p0, v4}, Landroid/content/Context;->getSystemService(Ljava/lang/String;)Ljava/lang/Object;
++    invoke-virtual {p0, v3}, Landroid/content/Context;->getSystemService(Ljava/lang/String;)Ljava/lang/Object;
+ 
+-    move-result-object v4
++    move-result-object v3
+ 
+-    check-cast v4, Landroid/app/KeyguardManager;
++    check-cast v3, Landroid/app/KeyguardManager;
+ 
+-    invoke-virtual {v4, p1}, Landroid/app/KeyguardManager;->isDeviceLocked(I)Z
++    invoke-virtual {v3, p1}, Landroid/app/KeyguardManager;->isDeviceLocked(I)Z
+ 
+-    move-result v4
++    move-result v3
+ 
+-    if-eqz v4, :cond_9
++    if-eqz v3, :cond_7
+ 
+     invoke-static {p1}, Lcom/samsung/android/knox/SemPersonaManager;->isSecureFolderId(I)Z
+ 
+-    move-result v4
++    move-result v3
+ 
+-    if-nez v4, :cond_9
++    if-nez v3, :cond_7
+ 
+-    const-string/jumbo v4, "trust"
++    const-string/jumbo v3, "trust"
+ 
+-    invoke-virtual {p0, v4}, Landroid/content/Context;->getSystemService(Ljava/lang/String;)Ljava/lang/Object;
++    invoke-virtual {p0, v3}, Landroid/content/Context;->getSystemService(Ljava/lang/String;)Ljava/lang/Object;
+ 
+-    move-result-object v4
++    move-result-object v3
+ 
+-    check-cast v4, Landroid/app/trust/TrustManager;
++    check-cast v3, Landroid/app/trust/TrustManager;
+ 
+-    invoke-virtual {v4, p1, v3}, Landroid/app/trust/TrustManager;->setDeviceLockedForUser(IZ)V
++    invoke-virtual {v3, p1, v4}, Landroid/app/trust/TrustManager;->setDeviceLockedForUser(IZ)V
+ 
+-    invoke-virtual {v1, v3, p1}, Lcom/android/internal/widget/LockPatternUtils;->requireStrongAuth(II)V
++    invoke-virtual {v2, v4, p1}, Lcom/android/internal/widget/LockPatternUtils;->requireStrongAuth(II)V
+ 
+-    :cond_9
+-    invoke-virtual {v1, p1}, Lcom/android/internal/widget/LockPatternUtils;->getActivePasswordQuality(I)I
++    :cond_7
++    invoke-virtual {v2, p1}, Lcom/android/internal/widget/LockPatternUtils;->getActivePasswordQuality(I)I
+ 
+-    move-result v1
++    move-result v2
+ 
+-    invoke-static {v1}, Lcom/samsung/android/settings/knox/KnoxUtils;->getPasswordType(I)I
++    const/high16 v3, 0x10000
+ 
+-    move-result v1
++    if-eq v2, v3, :cond_a
+ 
++    const/high16 v3, 0x20000
++
++    if-eq v2, v3, :cond_9
++
++    const/high16 v3, 0x30000
++
++    if-eq v2, v3, :cond_9
++
++    const/high16 v3, 0x40000
++
++    if-eq v2, v3, :cond_8
++
++    const/high16 v3, 0x50000
++
++    if-eq v2, v3, :cond_8
++
++    const/high16 v3, 0x60000
++
++    if-eq v2, v3, :cond_8
++
++    const/4 v2, 0x1
++
++    goto :goto_3
++
++    :cond_8
++    const/4 v2, 0x4
++
++    goto :goto_3
++
++    :cond_9
++    const/4 v2, 0x3
++
++    goto :goto_3
++
++    :cond_a
++    const/4 v2, 0x2
++
++    :goto_3
+     new-instance v3, Ljava/lang/StringBuilder;
+ 
+-    invoke-direct {v3, v0}, Ljava/lang/StringBuilder;-><init>(Ljava/lang/String;)V
++    invoke-direct {v3, v1}, Ljava/lang/StringBuilder;-><init>(Ljava/lang/String;)V
+ 
+-    invoke-virtual {v3, v1}, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
++    invoke-virtual {v3, v2}, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
+ 
+     invoke-virtual {v3}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+ 
+-    move-result-object v0
++    move-result-object v1
+ 
+-    invoke-static {v2, v0}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
++    invoke-static {v0, v1}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
+ 
+-    invoke-static {p0, p1, v1}, Lcom/samsung/android/settings/knox/KnoxUtils;->insertStatusLogForKnox(Landroid/content/Context;II)V
++    invoke-static {p0, p1, v2}, Lcom/samsung/android/settings/knox/KnoxUtils;->insertStatusLogForKnox(Landroid/content/Context;II)V
+     :try_end_1
+     .catch Ljava/lang/Exception; {:try_start_1 .. :try_end_1} :catch_1
+ 
+-    :cond_a
+-    :goto_3
+     return-void
+ 
+     :catch_1
+@@ -2189,9 +2173,11 @@
+ 
+     invoke-virtual {p0}, Ljava/lang/Exception;->printStackTrace()V
+ 
++    :cond_b
++    :goto_4
+     return-void
+ 
+-    :cond_b
++    :cond_c
+     new-instance p0, Ljava/lang/IllegalStateException;
+ 
+     const-string p1, "Unable to load UserManager"
 diff --git a/smali_classes5/com/samsung/android/settings/lockscreen/controller/DualDarDoScreenLockTypePreferenceController.smali b/smali_classes5/com/samsung/android/settings/lockscreen/controller/DualDarDoScreenLockTypePreferenceController.smali
+index f095535f..d6b6a58e 100644
 --- a/smali_classes5/com/samsung/android/settings/lockscreen/controller/DualDarDoScreenLockTypePreferenceController.smali
 +++ b/smali_classes5/com/samsung/android/settings/lockscreen/controller/DualDarDoScreenLockTypePreferenceController.smali
-@@ -353,3 +353 @@
+@@ -37,9 +37,9 @@
+ 
+     invoke-static {p2, v0}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
+ 
+-    invoke-static {p1}, Lcom/samsung/android/settings/knox/KnoxUtils;->getDualDarDoInnerAuthUserId(Landroid/content/Context;)I
++    sget-object p2, Lcom/samsung/android/settings/knox/KnoxUtils;->mDeviceType:Ljava/lang/String;
+ 
+-    move-result p2
++    const/4 p2, -0x1
+ 
+     iput p2, p0, Lcom/samsung/android/settings/lockscreen/controller/DualDarDoScreenLockTypePreferenceController;->mUserId:I
+ 
+@@ -348,13 +348,7 @@
+ .method public getAvailabilityStatus()I
+     .locals 1
+ 
+-    sget-object v0, Lcom/samsung/android/settings/knox/KnoxUtils;->mDeviceType:Ljava/lang/String;
+-
 -    invoke-static {}, Lcom/samsung/android/knox/dar/ddar/DualDarManager;->isOnDeviceOwnerEnabled()Z
 -
 -    move-result v0
-+    const/4 v0, 0x0
+-
+-    if-nez v0, :cond_0
++    sget-object p0, Lcom/samsung/android/settings/knox/KnoxUtils;->mDeviceType:Ljava/lang/String;
+ 
+     sget-object p0, Lcom/samsung/android/settings/lockscreen/controller/DualDarDoScreenLockTypePreferenceController;->TAG:Ljava/lang/String;
+ 
+@@ -365,24 +359,6 @@
+     const/4 p0, 0x4
+ 
+     return p0
+-
+-    :cond_0
+-    iget-object p0, p0, Lcom/samsung/android/settings/lockscreen/controller/DualDarDoScreenLockTypePreferenceController;->mLockPatternUtils:Lcom/android/internal/widget/LockPatternUtils;
+-
+-    const/4 v0, 0x0
+-
+-    invoke-virtual {p0, v0}, Lcom/android/internal/widget/LockPatternUtils;->isSecure(I)Z
+-
+-    move-result p0
+-
+-    if-nez p0, :cond_1
+-
+-    const/4 p0, 0x5
+-
+-    return p0
+-
+-    :cond_1
+-    return v0
+ .end method
+ 
+ .method public bridge synthetic getBackgroundWorkerClass()Ljava/lang/Class;
 diff --git a/smali_classes5/com/samsung/android/settings/password/LockTypePolicy.smali b/smali_classes5/com/samsung/android/settings/password/LockTypePolicy.smali
+index 0cf34ec4..ba84e3ed 100644
 --- a/smali_classes5/com/samsung/android/settings/password/LockTypePolicy.smali
 +++ b/smali_classes5/com/samsung/android/settings/password/LockTypePolicy.smali
-@@ -297,3 +297 @@
+@@ -22,9 +22,9 @@
+ 
+ .field public final mIsDOEnabled:Z
+ 
+-.field public final mIsDualDarDoEnabled:Z
+ 
+-.field public final mIsDualDarDoUser:Z
++
++
+ 
+ .field public final mIsKnoxId:Z
+ 
+@@ -294,35 +294,11 @@
+ 
+     iput-boolean p2, p0, Lcom/samsung/android/settings/password/LockTypePolicy;->mIsOrganizationOwnedDeviceWithManagedProfile:Z
+ 
 -    invoke-static {}, Lcom/samsung/android/knox/dar/ddar/DualDarManager;->isOnDeviceOwnerEnabled()Z
 -
 -    move-result p2
-+    const/4 p2, 0x0
---
-2.51.1
+-
+-    iput-boolean p2, p0, Lcom/samsung/android/settings/password/LockTypePolicy;->mIsDualDarDoEnabled:Z
+-
+-    if-eqz p2, :cond_5
+-
+-    invoke-static {p1, p3}, Lcom/samsung/android/settings/knox/KnoxUtils;->isDualDarDoInnerAuthUser(Landroid/content/Context;I)Z
+-
+-    move-result p2
+-
+-    if-eqz p2, :cond_5
+-
+-    move p2, v3
+-
+-    goto :goto_4
+-
+-    :cond_5
+-    move p2, v2
+-
+-    :goto_4
+-    iput-boolean p2, p0, Lcom/samsung/android/settings/password/LockTypePolicy;->mIsDualDarDoUser:Z
+-
+     invoke-static {p1}, Lcom/samsung/android/knox/EnterpriseDeviceManager;->getInstance(Landroid/content/Context;)Lcom/samsung/android/knox/EnterpriseDeviceManager;
+ 
+     move-result-object p1
+ 
+-    if-eqz p1, :cond_6
++    if-eqz p1, :cond_5
+ 
+     invoke-virtual {p1}, Lcom/samsung/android/knox/EnterpriseDeviceManager;->isMdmAdminPresent()Z
+ 
+@@ -330,7 +306,7 @@
+ 
+     iput-boolean p1, p0, Lcom/samsung/android/settings/password/LockTypePolicy;->mIsPasswordAdminEnabled:Z
+ 
+-    :cond_6
++    :cond_5
+     const-string/jumbo p1, "ro.organization_owned"
+ 
+     const/4 p2, 0x0
+@@ -339,7 +315,7 @@
+ 
+     move-result-object p1
+ 
+-    if-eqz p1, :cond_7
++    if-eqz p1, :cond_6
+ 
+     const-string/jumbo p2, "true"
+ 
+@@ -347,33 +323,33 @@
+ 
+     move-result p1
+ 
+-    if-eqz p1, :cond_7
++    if-eqz p1, :cond_6
+ 
+     move p1, v3
+ 
+-    goto :goto_5
++    goto :goto_4
+ 
+-    :cond_7
++    :cond_6
+     move p1, v2
+ 
+-    :goto_5
++    :goto_4
+     iput-boolean p1, p0, Lcom/samsung/android/settings/password/LockTypePolicy;->mIsOrganizationOwned:Z
+ 
+     invoke-virtual {v0, p3}, Landroid/os/UserManager;->getUserInfo(I)Landroid/content/pm/UserInfo;
+ 
+     move-result-object p1
+ 
+-    if-eqz p1, :cond_8
++    if-eqz p1, :cond_7
+ 
+     invoke-virtual {p1}, Landroid/content/pm/UserInfo;->isManagedProfile()Z
+ 
+     move-result p1
+ 
+-    if-eqz p1, :cond_8
++    if-eqz p1, :cond_7
+ 
+     move v2, v3
+ 
+-    :cond_8
++    :cond_7
+     iput-boolean v2, p0, Lcom/samsung/android/settings/password/LockTypePolicy;->mIsManagedProfile:Z
+ 
+     return-void
+@@ -427,26 +403,18 @@
+ 
+     iget-boolean v0, p0, Lcom/samsung/android/settings/password/LockTypePolicy;->mIsSecureFolderId:Z
+ 
+-    if-eqz v0, :cond_2
++    if-eqz v0, :cond_1
+ 
+     :cond_0
+-    iget-boolean v0, p0, Lcom/samsung/android/settings/password/LockTypePolicy;->mIsDOEnabled:Z
+-
+-    if-nez v0, :cond_2
++    iget-boolean p0, p0, Lcom/samsung/android/settings/password/LockTypePolicy;->mIsDOEnabled:Z
+ 
+-    iget-boolean p0, p0, Lcom/samsung/android/settings/password/LockTypePolicy;->mIsDualDarDoUser:Z
+-
+-    if-eqz p0, :cond_1
+-
+-    goto :goto_0
++    if-nez p0, :cond_1
+ 
+-    :cond_1
+     const/4 p0, 0x0
+ 
+     return p0
+ 
+-    :cond_2
+-    :goto_0
++    :cond_1
+     const/4 p0, 0x1
+ 
+     return p0
+@@ -457,29 +425,21 @@
+ 
+     iget-boolean v0, p0, Lcom/samsung/android/settings/password/LockTypePolicy;->mIsKnoxId:Z
+ 
+-    if-nez v0, :cond_1
++    if-nez v0, :cond_0
+ 
+     iget-boolean v0, p0, Lcom/samsung/android/settings/password/LockTypePolicy;->mIsDOEnabled:Z
+ 
+-    if-nez v0, :cond_1
++    if-nez v0, :cond_0
+ 
+-    iget-boolean v0, p0, Lcom/samsung/android/settings/password/LockTypePolicy;->mIsOrganizationOwnedDeviceWithManagedProfile:Z
++    iget-boolean p0, p0, Lcom/samsung/android/settings/password/LockTypePolicy;->mIsOrganizationOwnedDeviceWithManagedProfile:Z
+ 
+-    if-nez v0, :cond_1
+-
+-    iget-boolean p0, p0, Lcom/samsung/android/settings/password/LockTypePolicy;->mIsDualDarDoUser:Z
+-
+-    if-eqz p0, :cond_0
++    if-nez p0, :cond_0
+ 
+-    goto :goto_0
+-
+-    :cond_0
+     const/4 p0, 0x0
+ 
+     return p0
+ 
+-    :cond_1
+-    :goto_0
++    :cond_0
+     const/4 p0, 0x1
+ 
+     return p0
+-- 
+2.53.0
+

@@ -15,22 +15,6 @@
             <meta-data android:name="com.android.settings.FRAGMENT_CLASS" android:value="io.mesalabs.unica.settings.extra.ExtraSettingsFragment"/>
             <meta-data android:name="com.android.settings.HIGHLIGHT_MENU_KEY" android:value="@string/menu_key_unica_top_settings"/>
         </activity>
-        <activity android:configChanges="keyboardHidden|orientation|screenSize" android:exported="true" android:label="@string/unica_scpm_allowlist_title" android:name="com.android.settings.Settings$UnicaScpmAllowlistSettingsActivity" android:parentActivityName="com.android.settings.Settings$UnicaExtraSettingsActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
-                <category android:name="android.intent.category.DEFAULT"/>
-            </intent-filter>
-            <meta-data android:name="com.android.settings.FRAGMENT_CLASS" android:value="io.mesalabs.unica.settings.extra.ScpmAllowlistFragment"/>
-            <meta-data android:name="com.android.settings.HIGHLIGHT_MENU_KEY" android:value="@string/menu_key_unica_top_settings"/>
-        </activity>
-        <activity android:configChanges="keyboardHidden|orientation|screenSize" android:exported="true" android:label="@string/unica_now_nudge_replies_title" android:name="com.android.settings.Settings$UnicaNowNudgeReplyFallbacksActivity" android:parentActivityName="com.android.settings.Settings$UnicaExtraSettingsActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
-                <category android:name="android.intent.category.DEFAULT"/>
-            </intent-filter>
-            <meta-data android:name="com.android.settings.FRAGMENT_CLASS" android:value="io.mesalabs.unica.settings.extra.NowNudgeReplyFallbacksFragment"/>
-            <meta-data android:name="com.android.settings.HIGHLIGHT_MENU_KEY" android:value="@string/menu_key_unica_top_settings"/>
-        </activity>
         <activity android:configChanges="keyboardHidden|orientation|screenSize" android:exported="true" android:label="@string/unica_hma_title" android:name="com.android.settings.Settings$UnicaHMASettingsActivity" android:parentActivityName="com.android.settings.Settings$UnicaSpoofSettingsActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
@@ -45,22 +29,6 @@
                 <category android:name="android.intent.category.DEFAULT"/>
             </intent-filter>
             <meta-data android:name="com.android.settings.FRAGMENT_CLASS" android:value="io.mesalabs.unica.settings.spoof.HideDeveloperStatusFragment"/>
-            <meta-data android:name="com.android.settings.HIGHLIGHT_MENU_KEY" android:value="@string/menu_key_unica_top_settings"/>
-        </activity>
-        <activity android:configChanges="keyboardHidden|orientation|screenSize" android:exported="true" android:label="@string/unica_camera_feature_title" android:name="com.android.settings.Settings$UnicaCameraFeatureSettingsActivity" android:parentActivityName="com.android.settings.Settings$UnicaSettingsActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
-                <category android:name="android.intent.category.DEFAULT"/>
-            </intent-filter>
-            <meta-data android:name="com.android.settings.FRAGMENT_CLASS" android:value="io.mesalabs.unica.settings.spoof.CameraFeatureFragment"/>
-            <meta-data android:name="com.android.settings.HIGHLIGHT_MENU_KEY" android:value="@string/menu_key_unica_top_settings"/>
-        </activity>
-        <activity android:configChanges="keyboardHidden|orientation|screenSize" android:exported="true" android:label="@string/unica_font_selector_title" android:name="com.android.settings.Settings$UnicaFontSelectorSettingsActivity" android:parentActivityName="com.android.settings.Settings$UnicaSettingsActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
-                <category android:name="android.intent.category.DEFAULT"/>
-            </intent-filter>
-            <meta-data android:name="com.android.settings.FRAGMENT_CLASS" android:value="io.mesalabs.unica.settings.font.FontSelectorFragment"/>
             <meta-data android:name="com.android.settings.HIGHLIGHT_MENU_KEY" android:value="@string/menu_key_unica_top_settings"/>
         </activity>
         <activity android:configChanges="keyboardHidden|orientation|screenSize" android:exported="true" android:label="@string/unica_spoof_settings_title" android:name="com.android.settings.Settings$UnicaSpoofSettingsActivity" android:parentActivityName="com.android.settings.Settings$UnicaSettingsActivity">

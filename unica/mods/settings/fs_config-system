@@ -1,12 +1,4 @@
 system 0 0 755 capabilities=0x0
 system/etc 0 0 755 capabilities=0x0
 system/etc/init 0 0 755 capabilities=0x0
-system/etc/init/unica_noti_ai_json.rc 0 0 644 capabilities=0x0
-system/etc/init/unica_now_nudge.rc 0 0 644 capabilities=0x0
-system/etc/init/unica_scpm_allowlist.rc 0 0 644 capabilities=0x0
 system/etc/init/vulkan.rc 0 0 644 capabilities=0x0
-system/etc/unica 0 0 755 capabilities=0x0
-system/etc/unica/now_nudge_defaults.sh 0 2000 755 capabilities=0x0
-system/etc/unica/now_nudge_reply_fallbacks.json 0 0 644 capabilities=0x0
-system/etc/unica/notification_ai_scpm_policies.json 0 0 644 capabilities=0x0
-system/etc/unica/scpm_allowlist_apply.sh 0 2000 755 capabilities=0x0

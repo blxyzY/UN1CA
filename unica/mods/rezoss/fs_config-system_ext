@@ -1,6 +1,0 @@
-system_ext 0 0 755 capabilities=0x0
-system_ext/etc/default-permissions 0 0 755 capabilities=0x0
-system_ext/etc/default-permissions/default-permissions-com.google.android.mosey.xml 0 0 644 capabilities=0x0
-system_ext/etc/permissions/privapp-permissions-com.google.android.mosey.xml 0 0 644 capabilities=0x0
-system_ext/priv-app/MoseyApp 0 0 755 capabilities=0x0
-system_ext/priv-app/MoseyApp/MoseyApp.apk 0 0 644 capabilities=0x0

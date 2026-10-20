@@ -1,13 +1,66 @@
-From 8a9a084f8f82fa587eda154956cdc7984f9a9a56 Mon Sep 17 00:00:00 2001
-From: Salvo Giangreco <giangrecosalvo9@gmail.com>
-Date: Mon, 22 Sep 2025 13:23:15 +0200
-Subject: [PATCH] Nuke Knox HDM
+From 987e4bffb086cc772bc91bc7cae3e6ca6b900bd4 Mon Sep 17 00:00:00 2001
+From: Devcore94 <devcore94@users.noreply.github.com>
+Date: Sat, 22 Aug 2026 04:42:34 +0200
+Subject: [PATCH] unica: mods: deknox: adapt QPR2 HDM services
 
-UN1CA: this patch is not complete! Please check unica/mods/deknox/customize.sh for more info.
 ---
+ .../ISecureKeyGeneration$Stub$Proxy.smali     |   20 -
+ .../ISecureKeyGeneration$Stub.smali           |   10 -
+ .../ISecureKeyGeneration.smali                |    6 -
+ .../securekeygeneration/SecureKeyInfo$1.smali |  162 -
+ .../securekeygeneration/SecureKeyInfo.smali   |  142 -
+ .../EnterpriseDeviceManagerServiceImpl.smali  |  296 --
+ .../server/enterprise/hdm/HdmSakManager.smali | 1028 ----
+ ...HdmService$$ExternalSyntheticLambda0.smali |   22 -
+ .../hdm/HdmService$SetPolicyContext.smali     |   11 -
+ .../server/enterprise/hdm/HdmService.smali    | 4532 -----------------
+ ...twareBlock$$ExternalSyntheticLambda0.smali |  395 --
+ .../enterprise/hdm/HdmSoftwareBlock.smali     | 1420 ------
+ ...HdmSyncCrl$$ExternalSyntheticLambda0.smali |   70 -
+ .../server/enterprise/hdm/HdmSyncCrl.smali    |   23 -
+ .../enterprise/hdm/HdmVendorController.smali  | 1086 ----
+ .../DeviceAttestationException.smali          |   13 -
+ .../SecureKeyGenParameterSpec.smali           |   23 -
+ ...yGenerator$$ExternalSyntheticLambda0.smali |  455 --
+ ...yGenerator$$ExternalSyntheticLambda1.smali |  106 -
+ ...yGenerator$$ExternalSyntheticLambda3.smali |  149 -
+ .../securekeyblob/SecureKeyGenerator.smali    |  744 ---
+ .../securekeyblob/SecureKeyResult.smali       |   11 -
+ .../hardware/khdm/ISehKhdm$Stub$Proxy.smali   | 1003 ----
+ .../samsung/hardware/khdm/ISehKhdm$Stub.smali |   10 -
+ .../samsung/hardware/khdm/ISehKhdm.smali      |   30 -
+ .../hardware/khdm/SehDeviceInfo$1.smali       |   28 -
+ .../samsung/hardware/khdm/SehDeviceInfo.smali |  347 --
+ 27 files changed, 12142 deletions(-)
+ delete mode 100644 smali/android/security/securekeygeneration/ISecureKeyGeneration$Stub$Proxy.smali
+ delete mode 100644 smali/android/security/securekeygeneration/ISecureKeyGeneration$Stub.smali
+ delete mode 100644 smali/android/security/securekeygeneration/ISecureKeyGeneration.smali
+ delete mode 100644 smali/android/security/securekeygeneration/SecureKeyInfo$1.smali
+ delete mode 100644 smali/android/security/securekeygeneration/SecureKeyInfo.smali
+ delete mode 100644 smali/com/android/server/enterprise/hdm/HdmSakManager.smali
+ delete mode 100644 smali/com/android/server/enterprise/hdm/HdmService$$ExternalSyntheticLambda0.smali
+ delete mode 100644 smali/com/android/server/enterprise/hdm/HdmService$SetPolicyContext.smali
+ delete mode 100644 smali/com/android/server/enterprise/hdm/HdmService.smali
+ delete mode 100644 smali/com/android/server/enterprise/hdm/HdmSoftwareBlock$$ExternalSyntheticLambda0.smali
+ delete mode 100644 smali/com/android/server/enterprise/hdm/HdmSoftwareBlock.smali
+ delete mode 100644 smali/com/android/server/enterprise/hdm/HdmSyncCrl$$ExternalSyntheticLambda0.smali
+ delete mode 100644 smali/com/android/server/enterprise/hdm/HdmSyncCrl.smali
+ delete mode 100644 smali_classes2/com/samsung/security/securekeyblob/DeviceAttestationException.smali
+ delete mode 100644 smali_classes2/com/samsung/security/securekeyblob/SecureKeyGenParameterSpec.smali
+ delete mode 100644 smali_classes2/com/samsung/security/securekeyblob/SecureKeyGenerator$$ExternalSyntheticLambda0.smali
+ delete mode 100644 smali_classes2/com/samsung/security/securekeyblob/SecureKeyGenerator$$ExternalSyntheticLambda1.smali
+ delete mode 100644 smali_classes2/com/samsung/security/securekeyblob/SecureKeyGenerator$$ExternalSyntheticLambda3.smali
+ delete mode 100644 smali_classes2/com/samsung/security/securekeyblob/SecureKeyGenerator.smali
+ delete mode 100644 smali_classes2/com/samsung/security/securekeyblob/SecureKeyResult.smali
+ delete mode 100644 smali_classes2/vendor/samsung/hardware/khdm/ISehKhdm$Stub$Proxy.smali
+ delete mode 100644 smali_classes2/vendor/samsung/hardware/khdm/ISehKhdm$Stub.smali
+ delete mode 100644 smali_classes2/vendor/samsung/hardware/khdm/ISehKhdm.smali
+ delete mode 100644 smali_classes2/vendor/samsung/hardware/khdm/SehDeviceInfo$1.smali
+ delete mode 100644 smali_classes2/vendor/samsung/hardware/khdm/SehDeviceInfo.smali
+
 diff --git a/smali/android/security/securekeygeneration/ISecureKeyGeneration$Stub$Proxy.smali b/smali/android/security/securekeygeneration/ISecureKeyGeneration$Stub$Proxy.smali
 deleted file mode 100644
-index 8e6091c..0000000
+index 8e6091cb..00000000
 --- a/smali/android/security/securekeygeneration/ISecureKeyGeneration$Stub$Proxy.smali
 +++ /dev/null
 @@ -1,20 +0,0 @@
@@ -33,7 +86,7 @@ index 8e6091c..0000000
 -.end method
 diff --git a/smali/android/security/securekeygeneration/ISecureKeyGeneration$Stub.smali b/smali/android/security/securekeygeneration/ISecureKeyGeneration$Stub.smali
 deleted file mode 100644
-index bd9e1e9..0000000
+index bd9e1e99..00000000
 --- a/smali/android/security/securekeygeneration/ISecureKeyGeneration$Stub.smali
 +++ /dev/null
 @@ -1,10 +0,0 @@
@@ -49,7 +102,7 @@ index bd9e1e9..0000000
 -.field public static final synthetic $r8$clinit:I
 diff --git a/smali/android/security/securekeygeneration/ISecureKeyGeneration.smali b/smali/android/security/securekeygeneration/ISecureKeyGeneration.smali
 deleted file mode 100644
-index 09e6188..0000000
+index 09e61886..00000000
 --- a/smali/android/security/securekeygeneration/ISecureKeyGeneration.smali
 +++ /dev/null
 @@ -1,6 +0,0 @@
@@ -61,7 +114,7 @@ index 09e6188..0000000
 -.implements Landroid/os/IInterface;
 diff --git a/smali/android/security/securekeygeneration/SecureKeyInfo$1.smali b/smali/android/security/securekeygeneration/SecureKeyInfo$1.smali
 deleted file mode 100644
-index e25bda6..0000000
+index e25bda67..00000000
 --- a/smali/android/security/securekeygeneration/SecureKeyInfo$1.smali
 +++ /dev/null
 @@ -1,162 +0,0 @@
@@ -229,7 +282,7 @@ index e25bda6..0000000
 -.end method
 diff --git a/smali/android/security/securekeygeneration/SecureKeyInfo.smali b/smali/android/security/securekeygeneration/SecureKeyInfo.smali
 deleted file mode 100644
-index 8487d62..0000000
+index 8487d62a..00000000
 --- a/smali/android/security/securekeygeneration/SecureKeyInfo.smali
 +++ /dev/null
 @@ -1,142 +0,0 @@
@@ -376,12 +429,12 @@ index 8487d62..0000000
 -    return-void
 -.end method
 diff --git a/smali/com/android/server/enterprise/EnterpriseDeviceManagerServiceImpl.smali b/smali/com/android/server/enterprise/EnterpriseDeviceManagerServiceImpl.smali
-index e85424c..1759b85 100644
+index 11891aba..4952249a 100644
 --- a/smali/com/android/server/enterprise/EnterpriseDeviceManagerServiceImpl.smali
 +++ b/smali/com/android/server/enterprise/EnterpriseDeviceManagerServiceImpl.smali
 @@ -1433,37 +1433,6 @@
      invoke-virtual {v0, v2}, Lcom/android/server/enterprise/restriction/RestrictionPolicy;->systemReady(I)V
-
+ 
      :cond_1b
 -    :try_start_11
 -    const-string/jumbo v0, "hdm_service"
@@ -418,9 +471,9 @@ index e85424c..1759b85 100644
      return-void
  .end method
 @@ -3471,271 +3440,6 @@
-
+ 
      invoke-static {v0, v3}, Landroid/os/ServiceManager;->addService(Ljava/lang/String;Landroid/os/IBinder;)V
-
+ 
 -    const-string/jumbo v3, "hdm_service"
 -
 -    new-instance v4, Lcom/android/server/enterprise/hdm/HdmService;
@@ -687,11 +740,11 @@ index e85424c..1759b85 100644
 -    invoke-static {v4, v3}, Lcom/android/server/enterprise/EnterpriseDeviceManagerServiceImpl$Injector;->addLazySystemService(Lcom/android/server/enterprise/EnterpriseServiceCallback;Ljava/lang/String;)V
 -
      iget-object v0, v1, Lcom/android/server/enterprise/EnterpriseDeviceManagerServiceImpl;->mContext:Landroid/content/Context;
-
+ 
      sget v2, Lcom/android/server/enterprise/appconfig/ApplicationRestrictionsService;->$r8$clinit:I
 diff --git a/smali/com/android/server/enterprise/hdm/HdmSakManager.smali b/smali/com/android/server/enterprise/hdm/HdmSakManager.smali
 deleted file mode 100644
-index e872ae2..0000000
+index e872ae2f..00000000
 --- a/smali/com/android/server/enterprise/hdm/HdmSakManager.smali
 +++ /dev/null
 @@ -1,1028 +0,0 @@
@@ -1725,7 +1778,7 @@ index e872ae2..0000000
 -.end method
 diff --git a/smali/com/android/server/enterprise/hdm/HdmService$$ExternalSyntheticLambda0.smali b/smali/com/android/server/enterprise/hdm/HdmService$$ExternalSyntheticLambda0.smali
 deleted file mode 100644
-index 596a418..0000000
+index 596a4180..00000000
 --- a/smali/com/android/server/enterprise/hdm/HdmService$$ExternalSyntheticLambda0.smali
 +++ /dev/null
 @@ -1,22 +0,0 @@
@@ -1753,7 +1806,7 @@ index 596a418..0000000
 -.end method
 diff --git a/smali/com/android/server/enterprise/hdm/HdmService$SetPolicyContext.smali b/smali/com/android/server/enterprise/hdm/HdmService$SetPolicyContext.smali
 deleted file mode 100644
-index c161e25..0000000
+index c161e252..00000000
 --- a/smali/com/android/server/enterprise/hdm/HdmService$SetPolicyContext.smali
 +++ /dev/null
 @@ -1,11 +0,0 @@
@@ -1770,7 +1823,7 @@ index c161e25..0000000
 -.field public serviceName:Ljava/lang/String;
 diff --git a/smali/com/android/server/enterprise/hdm/HdmService.smali b/smali/com/android/server/enterprise/hdm/HdmService.smali
 deleted file mode 100644
-index 6198913..0000000
+index 61989138..00000000
 --- a/smali/com/android/server/enterprise/hdm/HdmService.smali
 +++ /dev/null
 @@ -1,4532 +0,0 @@
@@ -6308,7 +6361,7 @@ index 6198913..0000000
 -.end method
 diff --git a/smali/com/android/server/enterprise/hdm/HdmSoftwareBlock$$ExternalSyntheticLambda0.smali b/smali/com/android/server/enterprise/hdm/HdmSoftwareBlock$$ExternalSyntheticLambda0.smali
 deleted file mode 100644
-index 7564c7e..0000000
+index 7564c7e7..00000000
 --- a/smali/com/android/server/enterprise/hdm/HdmSoftwareBlock$$ExternalSyntheticLambda0.smali
 +++ /dev/null
 @@ -1,395 +0,0 @@
@@ -6709,7 +6762,7 @@ index 7564c7e..0000000
 -.end method
 diff --git a/smali/com/android/server/enterprise/hdm/HdmSoftwareBlock.smali b/smali/com/android/server/enterprise/hdm/HdmSoftwareBlock.smali
 deleted file mode 100644
-index cfa976f..0000000
+index cfa976f5..00000000
 --- a/smali/com/android/server/enterprise/hdm/HdmSoftwareBlock.smali
 +++ /dev/null
 @@ -1,1420 +0,0 @@
@@ -8135,7 +8188,7 @@ index cfa976f..0000000
 -.end method
 diff --git a/smali/com/android/server/enterprise/hdm/HdmSyncCrl$$ExternalSyntheticLambda0.smali b/smali/com/android/server/enterprise/hdm/HdmSyncCrl$$ExternalSyntheticLambda0.smali
 deleted file mode 100644
-index 670a93e..0000000
+index 670a93eb..00000000
 --- a/smali/com/android/server/enterprise/hdm/HdmSyncCrl$$ExternalSyntheticLambda0.smali
 +++ /dev/null
 @@ -1,70 +0,0 @@
@@ -8211,7 +8264,7 @@ index 670a93e..0000000
 -.end method
 diff --git a/smali/com/android/server/enterprise/hdm/HdmSyncCrl.smali b/smali/com/android/server/enterprise/hdm/HdmSyncCrl.smali
 deleted file mode 100644
-index c697081..0000000
+index c697081d..00000000
 --- a/smali/com/android/server/enterprise/hdm/HdmSyncCrl.smali
 +++ /dev/null
 @@ -1,23 +0,0 @@
@@ -8239,25 +8292,27 @@ index c697081..0000000
 -    return-void
 -.end method
 diff --git a/smali/com/android/server/enterprise/hdm/HdmVendorController.smali b/smali/com/android/server/enterprise/hdm/HdmVendorController.smali
-index d4e37d4..2d89b59 100644
+index d4e37d43..dbb0ac6b 100644
 --- a/smali/com/android/server/enterprise/hdm/HdmVendorController.smali
 +++ b/smali/com/android/server/enterprise/hdm/HdmVendorController.smali
-@@ -3,11 +3,6 @@
+@@ -3,12 +3,6 @@
  .source "SourceFile"
-
-
+ 
+ 
 -# instance fields
 -.field public hidlSupport:Z
 -
 -.field public mISehKhdm:Lvendor/samsung/hardware/khdm/ISehKhdm;
 -
-
+-
  # direct methods
  .method public static native hdm_apply_policy([B[B[B[B[BZ)[B
-@@ -49,1082 +44,4 @@
+ .end method
+@@ -48,1083 +42,3 @@
+ 
  .method public static native hdm_unload()I
  .end method
-
+-
 -.method public static parseDeviceResponse(ILjava/lang/String;[B)[B
 -    .locals 1
 -
@@ -8790,7 +8845,7 @@ index d4e37d4..2d89b59 100644
 -
 -    :catch_0
 -    move-exception p0
-
+-
 -    new-instance p1, Ljava/lang/StringBuilder;
 -
 -    const-string/jumbo p2, "hdmGetPolicy failed: "
@@ -9339,7 +9394,7 @@ index d4e37d4..2d89b59 100644
 -.end method
 diff --git a/smali_classes2/com/samsung/security/securekeyblob/DeviceAttestationException.smali b/smali_classes2/com/samsung/security/securekeyblob/DeviceAttestationException.smali
 deleted file mode 100644
-index 2a9bb19..0000000
+index 2a9bb199..00000000
 --- a/smali_classes2/com/samsung/security/securekeyblob/DeviceAttestationException.smali
 +++ /dev/null
 @@ -1,13 +0,0 @@
@@ -9358,7 +9413,7 @@ index 2a9bb19..0000000
 -.end method
 diff --git a/smali_classes2/com/samsung/security/securekeyblob/SecureKeyGenParameterSpec.smali b/smali_classes2/com/samsung/security/securekeyblob/SecureKeyGenParameterSpec.smali
 deleted file mode 100644
-index 75bfa15..0000000
+index 75bfa15c..00000000
 --- a/smali_classes2/com/samsung/security/securekeyblob/SecureKeyGenParameterSpec.smali
 +++ /dev/null
 @@ -1,23 +0,0 @@
@@ -9387,7 +9442,7 @@ index 75bfa15..0000000
 -.field public mSignaturePaddings:[Ljava/lang/String;
 diff --git a/smali_classes2/com/samsung/security/securekeyblob/SecureKeyGenerator$$ExternalSyntheticLambda0.smali b/smali_classes2/com/samsung/security/securekeyblob/SecureKeyGenerator$$ExternalSyntheticLambda0.smali
 deleted file mode 100644
-index f8d3576..0000000
+index f8d35764..00000000
 --- a/smali_classes2/com/samsung/security/securekeyblob/SecureKeyGenerator$$ExternalSyntheticLambda0.smali
 +++ /dev/null
 @@ -1,455 +0,0 @@
@@ -9848,7 +9903,7 @@ index f8d3576..0000000
 -.end method
 diff --git a/smali_classes2/com/samsung/security/securekeyblob/SecureKeyGenerator$$ExternalSyntheticLambda1.smali b/smali_classes2/com/samsung/security/securekeyblob/SecureKeyGenerator$$ExternalSyntheticLambda1.smali
 deleted file mode 100644
-index 82507b9..0000000
+index 82507b92..00000000
 --- a/smali_classes2/com/samsung/security/securekeyblob/SecureKeyGenerator$$ExternalSyntheticLambda1.smali
 +++ /dev/null
 @@ -1,106 +0,0 @@
@@ -9960,7 +10015,7 @@ index 82507b9..0000000
 -.end method
 diff --git a/smali_classes2/com/samsung/security/securekeyblob/SecureKeyGenerator$$ExternalSyntheticLambda3.smali b/smali_classes2/com/samsung/security/securekeyblob/SecureKeyGenerator$$ExternalSyntheticLambda3.smali
 deleted file mode 100644
-index ff12448..0000000
+index ff12448a..00000000
 --- a/smali_classes2/com/samsung/security/securekeyblob/SecureKeyGenerator$$ExternalSyntheticLambda3.smali
 +++ /dev/null
 @@ -1,149 +0,0 @@
@@ -10115,7 +10170,7 @@ index ff12448..0000000
 -.end method
 diff --git a/smali_classes2/com/samsung/security/securekeyblob/SecureKeyGenerator.smali b/smali_classes2/com/samsung/security/securekeyblob/SecureKeyGenerator.smali
 deleted file mode 100644
-index cf92f87..0000000
+index cf92f87e..00000000
 --- a/smali_classes2/com/samsung/security/securekeyblob/SecureKeyGenerator.smali
 +++ /dev/null
 @@ -1,744 +0,0 @@
@@ -10865,7 +10920,7 @@ index cf92f87..0000000
 -.end method
 diff --git a/smali_classes2/com/samsung/security/securekeyblob/SecureKeyResult.smali b/smali_classes2/com/samsung/security/securekeyblob/SecureKeyResult.smali
 deleted file mode 100644
-index 4402d8d..0000000
+index 4402d8de..00000000
 --- a/smali_classes2/com/samsung/security/securekeyblob/SecureKeyResult.smali
 +++ /dev/null
 @@ -1,11 +0,0 @@
@@ -10882,7 +10937,7 @@ index 4402d8d..0000000
 -.field public mServiceKey:[B
 diff --git a/smali_classes2/vendor/samsung/hardware/khdm/ISehKhdm$Stub$Proxy.smali b/smali_classes2/vendor/samsung/hardware/khdm/ISehKhdm$Stub$Proxy.smali
 deleted file mode 100644
-index bd789fb..0000000
+index bd789fbd..00000000
 --- a/smali_classes2/vendor/samsung/hardware/khdm/ISehKhdm$Stub$Proxy.smali
 +++ /dev/null
 @@ -1,1003 +0,0 @@
@@ -11891,7 +11946,7 @@ index bd789fb..0000000
 -.end method
 diff --git a/smali_classes2/vendor/samsung/hardware/khdm/ISehKhdm$Stub.smali b/smali_classes2/vendor/samsung/hardware/khdm/ISehKhdm$Stub.smali
 deleted file mode 100644
-index ccf89a4..0000000
+index ccf89a40..00000000
 --- a/smali_classes2/vendor/samsung/hardware/khdm/ISehKhdm$Stub.smali
 +++ /dev/null
 @@ -1,10 +0,0 @@
@@ -11907,7 +11962,7 @@ index ccf89a4..0000000
 -.field public static final synthetic $r8$clinit:I
 diff --git a/smali_classes2/vendor/samsung/hardware/khdm/ISehKhdm.smali b/smali_classes2/vendor/samsung/hardware/khdm/ISehKhdm.smali
 deleted file mode 100644
-index fb94ebc..0000000
+index fb94ebcb..00000000
 --- a/smali_classes2/vendor/samsung/hardware/khdm/ISehKhdm.smali
 +++ /dev/null
 @@ -1,30 +0,0 @@
@@ -11943,7 +11998,7 @@ index fb94ebc..0000000
 -.end method
 diff --git a/smali_classes2/vendor/samsung/hardware/khdm/SehDeviceInfo$1.smali b/smali_classes2/vendor/samsung/hardware/khdm/SehDeviceInfo$1.smali
 deleted file mode 100644
-index de1bfbe..0000000
+index de1bfbea..00000000
 --- a/smali_classes2/vendor/samsung/hardware/khdm/SehDeviceInfo$1.smali
 +++ /dev/null
 @@ -1,28 +0,0 @@
@@ -11977,7 +12032,7 @@ index de1bfbe..0000000
 -.end method
 diff --git a/smali_classes2/vendor/samsung/hardware/khdm/SehDeviceInfo.smali b/smali_classes2/vendor/samsung/hardware/khdm/SehDeviceInfo.smali
 deleted file mode 100644
-index 469097a..0000000
+index 469097a5..00000000
 --- a/smali_classes2/vendor/samsung/hardware/khdm/SehDeviceInfo.smali
 +++ /dev/null
 @@ -1,347 +0,0 @@
@@ -12328,3 +12383,6 @@ index 469097a..0000000
 -
 -    return-void
 -.end method
+-- 
+2.53.0
+

@@ -1,13 +1,15 @@
-From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
-From: Salvo Giangreco <giangrecosalvo9@gmail.com>
-Date: Sat, 15 Nov 2025 14:11:10 +0100
-Subject: [PATCH] Nuke BlockchainTZService
+From 42c86b6b03a4b325deae98904cd7f813f0166620 Mon Sep 17 00:00:00 2001
+From: Devcore94 <devcore94@users.noreply.github.com>
+Date: Sat, 22 Aug 2026 05:05:13 +0200
+Subject: [PATCH] unica: mods: deknox: adapt QPR2 BlockchainTZ service
 
 ---
- smali/com/android/server/SystemServer$$ExternalSyntheticLambda10.smali | 93 +++++++------------
- smali/com/android/server/SystemServer$5.smali | 37 +------
- 2 files changed, 35 insertions(+), 95 deletions(-)
+ ...temServer$$ExternalSyntheticLambda10.smali | 93 +++++++------------
+ smali/com/android/server/SystemServer$5.smali | 35 +------
+ 2 files changed, 35 insertions(+), 93 deletions(-)
 
+diff --git a/smali/com/android/server/SystemServer$$ExternalSyntheticLambda10.smali b/smali/com/android/server/SystemServer$$ExternalSyntheticLambda10.smali
+index 20c557a..38da45c 100644
 --- a/smali/com/android/server/SystemServer$$ExternalSyntheticLambda10.smali
 +++ b/smali/com/android/server/SystemServer$$ExternalSyntheticLambda10.smali
 @@ -49,15 +49,11 @@
@@ -226,6 +228,8 @@ Subject: [PATCH] Nuke BlockchainTZService
      invoke-virtual {v1}, Landroid/util/TimingsTraceLog;->traceEnd()V
  
      return-void
+diff --git a/smali/com/android/server/SystemServer$5.smali b/smali/com/android/server/SystemServer$5.smali
+index 9e24012..67d94e6 100644
 --- a/smali/com/android/server/SystemServer$5.smali
 +++ b/smali/com/android/server/SystemServer$5.smali
 @@ -47,46 +47,20 @@
@@ -303,3 +307,6 @@ Subject: [PATCH] Nuke BlockchainTZService
          :pswitch_4
          :pswitch_3
          :pswitch_2
+-- 
+2.53.0
+

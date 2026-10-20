@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<PreferenceScreen android:title="@string/unica_hma_title" settings:hierarchicalParentFragment="io.mesalabs.unica.settings.spoof.SpoofSettingsFragment" settings:keywords="@string/unica_hma_summary" settings:topLevelPreferenceKey="unica_hma"
-  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:settings="http://schemas.android.com/apk/res-auto">
-    <Preference android:title="@string/unica_hma_title" android:key="unica_hma" android:summary="@string/unica_hma_summary" />
-</PreferenceScreen>

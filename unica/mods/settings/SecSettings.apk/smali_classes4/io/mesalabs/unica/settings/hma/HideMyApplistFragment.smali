@@ -6,10 +6,6 @@
 .implements Landroid/widget/CompoundButton$OnCheckedChangeListener;
 
 
-# static fields
-.field public static final SEARCH_INDEX_DATA_PROVIDER:Lcom/android/settings/search/BaseSearchIndexProvider;
-
-
 # instance fields
 .field public mAppPickerView:Landroidx/picker/widget/SeslAppPickerListView;
 
@@ -25,26 +21,6 @@
 
 
 # direct methods
-.method public static constructor <clinit>()V
-    .locals 3
-
-    new-instance v0, Lcom/android/settings/search/BaseSearchIndexProvider;
-
-    const-string v1, "xml"
-
-    const-string v2, "unica_hma_settings"
-
-    invoke-static {v1, v2}, Lio/mesalabs/unica/utils/Utils;->getResourceId(Ljava/lang/String;Ljava/lang/String;)I
-
-    move-result v1
-
-    invoke-direct {v0, v1}, Lcom/android/settings/search/BaseSearchIndexProvider;-><init>(I)V
-
-    sput-object v0, Lio/mesalabs/unica/settings/hma/HideMyApplistFragment;->SEARCH_INDEX_DATA_PROVIDER:Lcom/android/settings/search/BaseSearchIndexProvider;
-
-    return-void
-.end method
-
 .method public constructor <init>()V
     .locals 1
 

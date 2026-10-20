@@ -6188,13 +6188,6 @@
     "description": "Now brief, 개인의 하루 스케줄에 맞춰 유용한 콘텐츠와 다양한 작업을 브리핑으로 추천해 줍니다.\n\n1. '설정' 앱을 실행 하세요.\n2. 'Galaxy AI' 메뉴를 선택 하세요.\n3. 이곳에서 'Now brief' 메뉴를 찾을 수 있습니다."
   },
   {
-    "id": "20246",
-    "key": "key_smart_suggestions_nudge",
-    "authority": "com.android.settings",
-    "title": "Now nudge",
-    "description": "Now nudge, Get suggested actions based on what's on your screen to help you get things done quickly and easily.\n\n1. Run the 'Settings' app.\n2. Select the 'Galaxy AI' menu.\n3. Here you can find the 'Now nudge' menu."
-  },
-  {
     "id": "20244",
     "key": "content_to_include",
     "authority": "com.samsung.android.smartsuggestions.briefsettings.utils.BriefSettingsSearchProvider",

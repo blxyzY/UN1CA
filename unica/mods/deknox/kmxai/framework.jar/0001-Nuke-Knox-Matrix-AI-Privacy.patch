@@ -1,14 +1,14 @@
-From 73c6f106fbb864f367617780eb806908219d1b93 Mon Sep 17 00:00:00 2001
-From: Salvo Giangreco <giangrecosalvo9@gmail.com>
-Date: Mon, 22 Sep 2025 12:45:02 +0200
-Subject: [PATCH] Nuke Knox Matrix AI Privacy
+From db65ffb39cec821be6e9e0304a4bcfe1b4e7046c Mon Sep 17 00:00:00 2001
+From: Devcore94 <devcore94@users.noreply.github.com>
+Date: Sat, 22 Aug 2026 04:58:51 +0200
+Subject: [PATCH] unica: mods: deknox: adapt QPR2 Matrix AI privacy
 
 ---
- .../ai/privacy/PermissionData$1.smali           |  85 -----------------
- .../ai/privacy/PermissionData.smali             | 364 -----------------
- .../ai/privacy/PermissionDataController$1.smali |  69 -----------------
- .../ai/privacy/PermissionDataController$2.smali | 283 -----------------
- .../ai/privacy/PermissionDataController.smali   | 488 +----------------
+ .../ai/privacy/PermissionData$1.smali         |  85 ---
+ .../ai/privacy/PermissionData.smali           | 364 -------------
+ .../privacy/PermissionDataController$1.smali  |  69 ---
+ .../privacy/PermissionDataController$2.smali  | 283 ----------
+ .../ai/privacy/PermissionDataController.smali | 488 +-----------------
  5 files changed, 3 insertions(+), 1286 deletions(-)
  delete mode 100644 smali_classes6/com/samsung/android/kmxservice/ai/privacy/PermissionData$1.smali
  delete mode 100644 smali_classes6/com/samsung/android/kmxservice/ai/privacy/PermissionData.smali
@@ -17,7 +17,7 @@ Subject: [PATCH] Nuke Knox Matrix AI Privacy
 
 diff --git a/smali_classes6/com/samsung/android/kmxservice/ai/privacy/PermissionData$1.smali b/smali_classes6/com/samsung/android/kmxservice/ai/privacy/PermissionData$1.smali
 deleted file mode 100644
-index 2a8047fd..00000000
+index 2a8047f..0000000
 --- a/smali_classes6/com/samsung/android/kmxservice/ai/privacy/PermissionData$1.smali
 +++ /dev/null
 @@ -1,85 +0,0 @@
@@ -108,7 +108,7 @@ index 2a8047fd..00000000
 -.end method
 diff --git a/smali_classes6/com/samsung/android/kmxservice/ai/privacy/PermissionData.smali b/smali_classes6/com/samsung/android/kmxservice/ai/privacy/PermissionData.smali
 deleted file mode 100644
-index 57943f87..00000000
+index 57943f8..0000000
 --- a/smali_classes6/com/samsung/android/kmxservice/ai/privacy/PermissionData.smali
 +++ /dev/null
 @@ -1,364 +0,0 @@
@@ -478,7 +478,7 @@ index 57943f87..00000000
 -.end method
 diff --git a/smali_classes6/com/samsung/android/kmxservice/ai/privacy/PermissionDataController$1.smali b/smali_classes6/com/samsung/android/kmxservice/ai/privacy/PermissionDataController$1.smali
 deleted file mode 100644
-index 780f18fd..00000000
+index 780f18f..0000000
 --- a/smali_classes6/com/samsung/android/kmxservice/ai/privacy/PermissionDataController$1.smali
 +++ /dev/null
 @@ -1,69 +0,0 @@
@@ -553,7 +553,7 @@ index 780f18fd..00000000
 -.end method
 diff --git a/smali_classes6/com/samsung/android/kmxservice/ai/privacy/PermissionDataController$2.smali b/smali_classes6/com/samsung/android/kmxservice/ai/privacy/PermissionDataController$2.smali
 deleted file mode 100644
-index eb69e209..00000000
+index eb69e20..0000000
 --- a/smali_classes6/com/samsung/android/kmxservice/ai/privacy/PermissionDataController$2.smali
 +++ /dev/null
 @@ -1,283 +0,0 @@
@@ -841,7 +841,7 @@ index eb69e209..00000000
 -    return-void
 -.end method
 diff --git a/smali_classes6/com/samsung/android/kmxservice/ai/privacy/PermissionDataController.smali b/smali_classes6/com/samsung/android/kmxservice/ai/privacy/PermissionDataController.smali
-index f7dd6a75..2ca94dad 100644
+index f7dd6a7..2ca94da 100644
 --- a/smali_classes6/com/samsung/android/kmxservice/ai/privacy/PermissionDataController.smali
 +++ b/smali_classes6/com/samsung/android/kmxservice/ai/privacy/PermissionDataController.smali
 @@ -3,507 +3,25 @@
@@ -914,10 +914,9 @@ index f7dd6a75..2ca94dad 100644
 -
  .method public constructor blacklist <init>(Landroid/content/Context;)V
 -    .locals 2
-+    .locals 0
- 
-     invoke-direct {p0}, Ljava/lang/Object;-><init>()V
- 
+-
+-    invoke-direct {p0}, Ljava/lang/Object;-><init>()V
+-
 -    new-instance v0, Lcom/samsung/android/kmxservice/ai/privacy/PermissionDataController$2;
 -
 -    invoke-direct {v0, p0}, Lcom/samsung/android/kmxservice/ai/privacy/PermissionDataController$2;-><init>(Lcom/samsung/android/kmxservice/ai/privacy/PermissionDataController;)V
@@ -964,7 +963,7 @@ index f7dd6a75..2ca94dad 100644
 -
 -    iput-object p1, p0, Lcom/samsung/android/kmxservice/ai/privacy/PermissionDataController;->mKeyguardManager:Landroid/app/KeyguardManager;
 -
-     return-void
+-    return-void
 -.end method
 -
 -.method private blacklist isLastBulkSpent2Hours(J)Z
@@ -991,8 +990,8 @@ index f7dd6a75..2ca94dad 100644
 -.end method
 -
 -.method private blacklist isOpCodeEnable(I)Z
--    .locals 0
--
+     .locals 0
+ 
 -    iget-object p0, p0, Lcom/samsung/android/kmxservice/ai/privacy/PermissionDataController;->mPermissionGroupMap:Ljava/util/HashMap;
 -
 -    invoke-static {p1}, Ljava/lang/Integer;->valueOf(I)Ljava/lang/Integer;
@@ -1149,8 +1148,9 @@ index f7dd6a75..2ca94dad 100644
 -    iget-object p0, p0, Lcom/samsung/android/kmxservice/ai/privacy/PermissionDataController;->mReadLock:Ljava/util/concurrent/locks/Lock;
 -
 -    invoke-interface {p0}, Ljava/util/concurrent/locks/Lock;->unlock()V
--
--    return-void
++    invoke-direct {p0}, Ljava/lang/Object;-><init>()V
+ 
+     return-void
 -
 -    :catchall_0
 -    move-exception p1
@@ -1335,9 +1335,8 @@ index f7dd6a75..2ca94dad 100644
 -    invoke-static {p1, p2}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
 -
 -    invoke-virtual {p0}, Lcom/samsung/android/kmxservice/ai/privacy/PermissionDataController;->flushAsync()V
-+    .locals 0
- 
-     return-void
+-
+-    return-void
 -
 -    :cond_0
 -    iget-object p1, p0, Lcom/samsung/android/kmxservice/ai/privacy/PermissionDataController;->mPermissionDatas:Ljava/util/Set;
@@ -1351,9 +1350,11 @@ index f7dd6a75..2ca94dad 100644
 -    if-le p1, p2, :cond_1
 -
 -    invoke-virtual {p0}, Lcom/samsung/android/kmxservice/ai/privacy/PermissionDataController;->flushAsync()V
--
++    .locals 0
+ 
 -    :cond_1
--    return-void
+     return-void
  .end method
 -- 
-2.51.1
+2.53.0
+

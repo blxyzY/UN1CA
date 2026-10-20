@@ -1,14 +1,14 @@
-From 07df021f2666afcaffd9e882560626581ac6d7f5 Mon Sep 17 00:00:00 2001
-From: Salvo Giangreco <giangrecosalvo9@gmail.com>
-Date: Fri, 24 Oct 2025 14:21:42 +0200
-Subject: [PATCH] Allow disabling secure windows
+From d77941293aa617338931ef3ce4d81932b492a972 Mon Sep 17 00:00:00 2001
+From: Devcore94 <devcore94@users.noreply.github.com>
+Date: Sat, 22 Aug 2026 07:43:24 +0200
+Subject: [PATCH] Allow disabling secure windows on QPR2
 
 ---
  ...indowManagerService$SettingsObserver.smali | 47 +++++++------------
  1 file changed, 16 insertions(+), 31 deletions(-)
 
 diff --git a/smali_classes2/com/android/server/wm/WindowManagerService$SettingsObserver.smali b/smali_classes2/com/android/server/wm/WindowManagerService$SettingsObserver.smali
-index 5a7ae767c..e894586fe 100644
+index 67f9f6d5..f6edd680 100644
 --- a/smali_classes2/com/android/server/wm/WindowManagerService$SettingsObserver.smali
 +++ b/smali_classes2/com/android/server/wm/WindowManagerService$SettingsObserver.smali
 @@ -95,9 +95,9 @@
@@ -118,4 +118,4 @@ index 5a7ae767c..e894586fe 100644
      invoke-static {}, Lcom/android/server/wm/WindowManagerService;->resetPriorityAfterLockedSection()V
  
 -- 
-2.51.1
+2.53.0

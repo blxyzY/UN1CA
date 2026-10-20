@@ -1,24 +1,23 @@
-From b948e50bdb64e5a4ab50c3ee89a0ea55071a43a6 Mon Sep 17 00:00:00 2001
-From: Salvo Giangreco <giangrecosalvo9@gmail.com>
-Date: Fri, 3 Oct 2025 16:22:12 +0200
-Subject: [PATCH] Bypass ICD verification
+From 8a48ff51917bec272f85cc6ed647d1a7d06293e2 Mon Sep 17 00:00:00 2001
+From: Devcore94 <devcore94@users.noreply.github.com>
+Date: Sat, 22 Aug 2026 05:47:06 +0200
+Subject: [PATCH] unica: mods: knoxpatch: adapt QPR2 ICD bypass
 
-UN1CA: unica/mods/deknox needs to be applied for this patch to work!
 ---
  .../DevicePolicyManagerService.smali          | 14 -----------
- .../server/knox/dar/DarManagerService.smali  |  2 --
+ .../server/knox/dar/DarManagerService.smali   |  2 --
  .../server/pm/UserManagerService.smali        | 16 -------------
- .../AttestParameterSpec$Builder.smali         | 10 --------
+ .../AttestParameterSpec$Builder.smali         | 11 ---------
  .../keystore/AttestParameterSpec.smali        |  2 --
- .../security/keystore/AttestationUtils.smali  | 23 ++++++++-----------
+ .../security/keystore/AttestationUtils.smali  | 23 +++++++------------
  .../ssdid/SemSsdidManagerService.smali        |  2 --
- 7 files changed, 8 insertions(+), 61 deletions(-)
+ 7 files changed, 8 insertions(+), 62 deletions(-)
 
 diff --git a/smali/com/android/server/devicepolicy/DevicePolicyManagerService.smali b/smali/com/android/server/devicepolicy/DevicePolicyManagerService.smali
-index b0919df..0162667 100644
+index ea3f275..919d794 100644
 --- a/smali/com/android/server/devicepolicy/DevicePolicyManagerService.smali
 +++ b/smali/com/android/server/devicepolicy/DevicePolicyManagerService.smali
-@@ -63872,20 +63872,6 @@
+@@ -62859,20 +62859,6 @@
  
      invoke-direct {v7, v0, v8}, Lcom/samsung/android/security/keystore/AttestParameterSpec$Builder;-><init>(Ljava/lang/String;[B)V
  
@@ -40,10 +39,10 @@ index b0919df..0162667 100644
  
      move-result-object v7
 diff --git a/smali/com/android/server/knox/dar/DarManagerService.smali b/smali/com/android/server/knox/dar/DarManagerService.smali
-index 44de8b1..344e8ed 100644
+index 821b28b..5599599 100644
 --- a/smali/com/android/server/knox/dar/DarManagerService.smali
 +++ b/smali/com/android/server/knox/dar/DarManagerService.smali
-@@ -2223,8 +2223,6 @@
+@@ -1798,8 +1798,6 @@
  
      iput-object v0, v10, Lcom/samsung/android/security/keystore/AttestParameterSpec;->mChallenge:[B
  
@@ -53,10 +52,10 @@ index 44de8b1..344e8ed 100644
  
      iput-object v9, v10, Lcom/samsung/android/security/keystore/AttestParameterSpec;->mSpec:Landroid/security/keystore/KeyGenParameterSpec;
 diff --git a/smali_classes2/com/android/server/pm/UserManagerService.smali b/smali_classes2/com/android/server/pm/UserManagerService.smali
-index b0ffce9..4ea09f1 100644
+index 226e3e3..d49fe05 100644
 --- a/smali_classes2/com/android/server/pm/UserManagerService.smali
 +++ b/smali_classes2/com/android/server/pm/UserManagerService.smali
-@@ -7021,22 +7021,6 @@
+@@ -7017,22 +7017,6 @@
  
      invoke-direct {v8, v0, v11}, Lcom/samsung/android/security/keystore/AttestParameterSpec$Builder;-><init>(Ljava/lang/String;[B)V
  
@@ -80,19 +79,19 @@ index b0ffce9..4ea09f1 100644
  
      move-result-object v8
 diff --git a/smali_classes2/com/samsung/android/security/keystore/AttestParameterSpec$Builder.smali b/smali_classes2/com/samsung/android/security/keystore/AttestParameterSpec$Builder.smali
-index 0f771c3..9245b3f 100644
+index 141f436..aed1ae9 100644
 --- a/smali_classes2/com/samsung/android/security/keystore/AttestParameterSpec$Builder.smali
 +++ b/smali_classes2/com/samsung/android/security/keystore/AttestParameterSpec$Builder.smali
-@@ -8,8 +8,6 @@
+@@ -8,19 +8,12 @@
  
  .field public final mSpec:Landroid/security/keystore/KeyGenParameterSpec;
  
 -.field public mVerifiableIntegrity:Z
 -
- 
+-
  # direct methods
  .method public constructor <init>(Ljava/lang/String;[B)V
-@@ -17,10 +15,6 @@
+     .locals 8
  
      invoke-direct {p0}, Ljava/lang/Object;-><init>()V
  
@@ -103,7 +102,7 @@ index 0f771c3..9245b3f 100644
      invoke-virtual {p1}, Ljava/lang/String;->isEmpty()Z
  
      move-result v0
-@@ -91,8 +85,6 @@
+@@ -91,8 +84,6 @@
  
      new-instance v0, Lcom/samsung/android/security/keystore/AttestParameterSpec;
  
@@ -112,7 +111,7 @@ index 0f771c3..9245b3f 100644
      iget-object v2, p0, Lcom/samsung/android/security/keystore/AttestParameterSpec$Builder;->mSpec:Landroid/security/keystore/KeyGenParameterSpec;
  
      invoke-direct {v0}, Ljava/lang/Object;-><init>()V
-@@ -131,8 +123,6 @@
+@@ -131,8 +122,6 @@
      :goto_1
      iput-object p0, v0, Lcom/samsung/android/security/keystore/AttestParameterSpec;->mChallenge:[B
  
@@ -122,7 +121,7 @@ index 0f771c3..9245b3f 100644
  
      iput-boolean p0, v0, Lcom/samsung/android/security/keystore/AttestParameterSpec;->mSAKUidRequired:Z
 diff --git a/smali_classes2/com/samsung/android/security/keystore/AttestParameterSpec.smali b/smali_classes2/com/samsung/android/security/keystore/AttestParameterSpec.smali
-index 345216a..eecd382 100644
+index 6a2ddea..3717df7 100644
 --- a/smali_classes2/com/samsung/android/security/keystore/AttestParameterSpec.smali
 +++ b/smali_classes2/com/samsung/android/security/keystore/AttestParameterSpec.smali
 @@ -11,5 +11,3 @@
@@ -132,7 +131,7 @@ index 345216a..eecd382 100644
 -
 -.field public mVerifiableIntegrity:Z
 diff --git a/smali_classes2/com/samsung/android/security/keystore/AttestationUtils.smali b/smali_classes2/com/samsung/android/security/keystore/AttestationUtils.smali
-index 3a602a2..4d58a1a 100644
+index dfc3eac..c921bb3 100644
 --- a/smali_classes2/com/samsung/android/security/keystore/AttestationUtils.smali
 +++ b/smali_classes2/com/samsung/android/security/keystore/AttestationUtils.smali
 @@ -328,9 +328,9 @@
@@ -228,7 +227,7 @@ index 3a602a2..4d58a1a 100644
  
      iput-object p1, v0, Lcom/samsung/android/security/keystore/AttestParameterSpec;->mSpec:Landroid/security/keystore/KeyGenParameterSpec;
 diff --git a/smali_classes2/com/samsung/android/ssdid/SemSsdidManagerService.smali b/smali_classes2/com/samsung/android/ssdid/SemSsdidManagerService.smali
-index e163a09..8eafde9 100644
+index 56c024b..6bc1cee 100644
 --- a/smali_classes2/com/samsung/android/ssdid/SemSsdidManagerService.smali
 +++ b/smali_classes2/com/samsung/android/ssdid/SemSsdidManagerService.smali
 @@ -201,8 +201,6 @@
@@ -241,4 +240,5 @@ index e163a09..8eafde9 100644
  
      iput-object v7, v12, Lcom/samsung/android/security/keystore/AttestParameterSpec;->mSpec:Landroid/security/keystore/KeyGenParameterSpec;
 -- 
-2.51.1
+2.53.0
+

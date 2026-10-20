@@ -1,8 +1,4 @@
 /system u:object_r:system_file:s0
 /system/etc u:object_r:system_file:s0
 /system/etc/init u:object_r:system_file:s0
-/system/etc/init/unica_noti_ai_json\.rc u:object_r:system_file:s0
-/system/etc/init/unica_now_nudge\.rc u:object_r:system_file:s0
-/system/etc/init/unica_scpm_allowlist\.rc u:object_r:system_file:s0
 /system/etc/init/vulkan\.rc u:object_r:system_file:s0
-/system/etc/unica(/.*)? u:object_r:system_file:s0

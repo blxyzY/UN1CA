@@ -49,6 +49,8 @@ ENCODE_MP4()
 
     if $TARGET_COMMON_SUPPORT_DYN_RESOLUTION_CONTROL; then
         RES="1440:-1"
+    elif [[ "$TARGET_CODENAME" == @(a23|a23xq) ]]; then
+        RES="-1:1605"
     fi
 
     LOG "- Encoding $FILE_NAME"
@@ -59,7 +61,7 @@ ENCODE_MP4()
     CMD+=" -pix_fmt yuv420p -crf 18 -g 1"
     CMD+=" -preset veryslow -tune zerolatency"
     CMD+=" -movflags use_metadata_tags -map_metadata 0"
-    CMD+=" -vf \"fps=60,scale=$RES,setsar=1:1\""
+    CMD+=" -vf \"fps=60,scale=$RES,crop=trunc(iw/2)*2:trunc(ih/2)*2,setsar=1:1\""
     CMD+=" -video_track_timescale 360000 -movie_timescale 90000"
     CMD+=" \"$FILE_PATH/temp.mp4\""
 
@@ -70,34 +72,22 @@ ENCODE_MP4()
 
 ADD_TO_WORK_DIR "pa2qxxx" "system" \
     "system/priv-app/wallpaper-res/wallpaper-res.apk" 0 0 644 "u:object_r:system_file:s0"
-# DECODE_APK "system" "system/priv-app/wallpaper-res/wallpaper-res.apk"
-# WALLPAPER_RES_DIR="$APKTOOL_DIR/system/priv-app/wallpaper-res/wallpaper-res.apk/res"
-# for f in "$WALLPAPER_RES_DIR"/drawable-nodpi/dex_wallpaper_*.webp; do
-    # [ -f "$f" ] || continue
-    # COMPRESS_WEBP "$f"
-# done
-# for f in "$WALLPAPER_RES_DIR"/drawable-nodpi/[Ww]allpaper_*.webp; do
-    # [ -f "$f" ] || continue
-    # COMPRESS_WEBP "$f"
-# done
-# for f in "$WALLPAPER_RES_DIR"/raw/video_*.mp4 "$WALLPAPER_RES_DIR"/raw/E3_Infinite_Video_Wallpaper_*.mp4; do
-    # [ -f "$f" ] || continue
-    # ENCODE_MP4 "$f"
-# done
-# LOG "- Downloading latest Samsung Wallpaper app"
-# DOWNLOAD_FILE "$(GET_GALAXY_STORE_DOWNLOAD_URL "000008552712")" \
-    # "$WORK_DIR/system/system/priv-app/SpriteWallpaper/SpriteWallpaper.apk"
-# APPLY_PATCH "system" "system/priv-app/SpriteWallpaper/SpriteWallpaper.apk" \
-    # "$MODPATH/SpriteWallpaper.apk/0001-Force-Paradigm-wallpapers-motion-animator.patch"
-# APPLY_PATCH "system" "system/priv-app/SpriteWallpaper/SpriteWallpaper.apk" \
-    # "$MODPATH/SpriteWallpaper.apk/0002-Adjust-motion-animator-for-60fps-video-files.patch"
-# if grep -q -F '"filename": "video_001.mp4"' "$WALLPAPER_RES_DIR/raw/resources_info.json" && \
-        # grep -q -F '"transition_frame_info"' "$WALLPAPER_RES_DIR/raw/resources_info.json"; then
-    # APPLY_PATCH "system" "system/priv-app/wallpaper-res/wallpaper-res.apk" \
-        # "$MODPATH/wallpaper-res.apk/0001-Adjust-metadata-for-60fps-video-files.patch"
-# else
-    # LOG "- Skipping wallpaper-res metadata patch; no legacy transition frame metadata found"
-# fi
+DECODE_APK "system" "system/priv-app/wallpaper-res/wallpaper-res.apk"
+for f in "$APKTOOL_DIR/system/priv-app/wallpaper-res/wallpaper-res.apk/res/drawable-nodpi/dex_wallpaper_"*.webp; do
+    COMPRESS_WEBP "$f"
+done
+for f in "$APKTOOL_DIR/system/priv-app/wallpaper-res/wallpaper-res.apk/res/drawable-nodpi/wallpaper_"*.webp; do
+    COMPRESS_WEBP "$f"
+done
+for f in "$APKTOOL_DIR/system/priv-app/wallpaper-res/wallpaper-res.apk/res/raw/video_"*.mp4; do
+    ENCODE_MP4 "$f"
+done
+LOG "- Using QPR2 Samsung Wallpaper app"
+APPLY_PATCH "system" "system/priv-app/SpriteWallpaper/SpriteWallpaper.apk" \
+    "$MODPATH/SpriteWallpaper.apk/0001-Force-Paradigm-wallpapers-motion-animator.patch"
+APPLY_PATCH "system" "system/priv-app/SpriteWallpaper/SpriteWallpaper.apk" \
+    "$MODPATH/SpriteWallpaper.apk/0002-Adjust-motion-animator-for-60fps-video-files.patch"
+APPLY_PATCH "system" "system/priv-app/wallpaper-res/wallpaper-res.apk" \
+    "$MODPATH/wallpaper-res.apk/0001-Adjust-metadata-for-60fps-video-files.patch"
 
-# unset WALLPAPER_RES_DIR
-# unset -f ENCODE_MP4 COMPRESS_WEBP
+unset -f ENCODE_MP4 COMPRESS_WEBP

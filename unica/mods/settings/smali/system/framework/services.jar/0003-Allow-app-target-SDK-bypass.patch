@@ -1,20 +1,21 @@
-From 4463d74624598458ec43f2892eeca8b96a9177eb Mon Sep 17 00:00:00 2001
-From: utkustnr <utkuustuner@proton.me>
-Date: Fri, 24 Oct 2025 15:11:39 +0200
-Subject: [PATCH] Allow app target SDK bypass
+From 2e345faab9f2aa1f60a0c29e735a817f76c5e362 Mon Sep 17 00:00:00 2001
+From: Devcore94 <devcore94@users.noreply.github.com>
+Date: Sat, 22 Aug 2026 07:59:57 +0200
+Subject: [PATCH] Allow app target SDK bypass on QPR2
 
 ---
- .../server/pm/InstallPackageHelper.smali      | 14 ++++++++++++++
- 1 file changed, 14 insertions(+)
+ .../com/android/server/pm/InstallPackageHelper.smali | 12 +++++++++++-
+ 1 file changed, 11 insertions(+), 1 deletion(-)
 
 diff --git a/smali_classes2/com/android/server/pm/InstallPackageHelper.smali b/smali_classes2/com/android/server/pm/InstallPackageHelper.smali
-index 3a7bc5fe..2cf3f4b4 100644
+index 06e4e510..7e5c7737 100644
 --- a/smali_classes2/com/android/server/pm/InstallPackageHelper.smali
 +++ b/smali_classes2/com/android/server/pm/InstallPackageHelper.smali
-@@ -15669,6 +15669,20 @@
-     :cond_17
-     if-nez v0, :cond_19
+@@ -15653,7 +15653,17 @@
+     goto :goto_11
  
+     :cond_16
+-    move v0, v8
 +    iget-object v0, v1, Lcom/android/server/pm/InstallPackageHelper;->mContext:Landroid/content/Context;
 +
 +    invoke-virtual {v0}, Landroid/content/Context;->getContentResolver()Landroid/content/ContentResolver;
@@ -26,11 +27,8 @@ index 3a7bc5fe..2cf3f4b4 100644
 +    invoke-static {v0, v15, v8}, Landroid/provider/Settings$System;->getInt(Landroid/content/ContentResolver;Ljava/lang/String;I)I
 +
 +    move-result v0
-+
-+    if-nez v0, :cond_19
-+
-     invoke-interface {v3}, Lcom/android/internal/pm/parsing/pkg/ParsedPackage;->getTargetSdkVersion()I
  
-     move-result v0
+     :goto_11
+     if-nez v0, :cond_17
 -- 
-2.51.0
+2.53.0

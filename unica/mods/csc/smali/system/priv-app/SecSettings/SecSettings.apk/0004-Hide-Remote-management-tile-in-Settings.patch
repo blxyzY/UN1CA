@@ -1,0 +1,172 @@
+From 913a23d942dc6366912341f02a6b215bff46b512 Mon Sep 17 00:00:00 2001
+From: Devcore94 <devcore94@users.noreply.github.com>
+Date: Sat, 22 Aug 2026 01:37:23 +0200
+Subject: [PATCH] Hide Remote management tile in Settings on QPR2
+
+---
+ ...velRemoteSupportPreferenceController.smali | 148 +-----------------
+ 1 file changed, 1 insertion(+), 147 deletions(-)
+
+diff --git a/smali_classes5/com/samsung/android/settings/homepage/TopLevelRemoteSupportPreferenceController.smali b/smali_classes5/com/samsung/android/settings/homepage/TopLevelRemoteSupportPreferenceController.smali
+index 75c82eb..fdf6c81 100644
+--- a/smali_classes5/com/samsung/android/settings/homepage/TopLevelRemoteSupportPreferenceController.smali
++++ b/smali_classes5/com/samsung/android/settings/homepage/TopLevelRemoteSupportPreferenceController.smali
+@@ -467,154 +467,8 @@
+ .end method
+ 
+ .method public getAvailabilityStatus()I
+-    .locals 2
+-
+-    invoke-static {}, Lcom/samsung/android/settings/Rune;->isChinaModel()Z
+-
+-    move-result v0
+-
+-    if-nez v0, :cond_7
+-
+-    invoke-static {}, Lcom/samsung/android/settings/Rune;->isJapanModel()Z
+-
+-    move-result v0
+-
+-    if-eqz v0, :cond_0
+-
+-    goto/16 :goto_1
+-
+-    :cond_0
+-    invoke-static {}, Lcom/android/settings/Utils;->getSalesCode()Ljava/lang/String;
+-
+-    move-result-object v0
+-
+-    const-string v1, "VZW"
+-
+-    invoke-virtual {v1, v0}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
+-
+-    move-result v1
+-
+-    if-nez v1, :cond_7
+-
+-    const-string v1, "ATT"
+-
+-    invoke-virtual {v1, v0}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
+-
+-    move-result v1
+-
+-    if-nez v1, :cond_7
+-
+-    const-string v1, "AIO"
+-
+-    invoke-virtual {v1, v0}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
+-
+-    move-result v0
+-
+-    if-eqz v0, :cond_1
+-
+-    goto :goto_1
+-
+-    :cond_1
+-    iget-object v0, p0, Lcom/android/settingslib/core/AbstractPreferenceController;->mContext:Landroid/content/Context;
+-
+-    const v1, 0x7f150af0
+-
+-    invoke-virtual {v0, v1}, Landroid/content/Context;->getString(I)Ljava/lang/String;
+-
+-    move-result-object v1
+-
+-    invoke-static {v0, v1}, Lcom/samsung/android/settings/PkgUtils;->isPackageEnabled(Landroid/content/Context;Ljava/lang/String;)Z
+-
+-    move-result v0
+-
+-    if-eqz v0, :cond_2
+-
+-    goto :goto_0
+-
+-    :cond_2
+-    iget-object v0, p0, Lcom/android/settingslib/core/AbstractPreferenceController;->mContext:Landroid/content/Context;
+-
+-    invoke-virtual {v0}, Landroid/content/Context;->getPackageManager()Landroid/content/pm/PackageManager;
+-
+-    move-result-object v0
+-
+-    invoke-virtual {v0}, Landroid/content/pm/PackageManager;->isSafeMode()Z
+-
+-    move-result v0
+-
+-    if-eqz v0, :cond_3
+-
+-    goto :goto_0
+-
+-    :cond_3
+-    invoke-static {}, Landroid/os/UserHandle;->myUserId()I
+-
+-    move-result v0
+-
+-    if-eqz v0, :cond_4
+-
+-    const/4 p0, 0x4
+-
+-    return p0
+-
+-    :cond_4
+-    iget-object v0, p0, Lcom/android/settingslib/core/AbstractPreferenceController;->mContext:Landroid/content/Context;
+-
+-    iget-object v1, p0, Lcom/samsung/android/settings/homepage/TopLevelRemoteSupportPreferenceController;->mSmartTutorPkgName:Ljava/lang/String;
+-
+-    invoke-static {v0, v1}, Lcom/android/settings/Utils;->hasPackage(Landroid/content/Context;Ljava/lang/String;)Z
+-
+-    move-result v0
+-
+-    if-nez v0, :cond_6
+-
+-    new-instance v0, Ljava/io/File;
+-
+-    iget-object v1, p0, Lcom/samsung/android/settings/homepage/TopLevelRemoteSupportPreferenceController;->mSmartTutorPkgLocation:Ljava/lang/String;
+-
+-    invoke-direct {v0, v1}, Ljava/io/File;-><init>(Ljava/lang/String;)V
+-
+-    invoke-virtual {v0}, Ljava/io/File;->exists()Z
+-
+-    move-result v1
+-
+-    if-eqz v1, :cond_5
+-
+-    invoke-virtual {v0}, Ljava/io/File;->isDirectory()Z
+-
+-    move-result v0
+-
+-    if-eqz v0, :cond_6
+-
+-    :cond_5
+-    new-instance v0, Landroid/content/Intent;
+-
+-    invoke-direct {v0}, Landroid/content/Intent;-><init>()V
+-
+-    iget-object v1, p0, Lcom/samsung/android/settings/homepage/TopLevelRemoteSupportPreferenceController;->mSmartTutorDownloadUri:Landroid/net/Uri;
+-
+-    invoke-virtual {v0, v1}, Landroid/content/Intent;->setData(Landroid/net/Uri;)Landroid/content/Intent;
+-
+-    iget-object p0, p0, Lcom/android/settingslib/core/AbstractPreferenceController;->mContext:Landroid/content/Context;
+-
+-    invoke-static {p0, v0}, Lcom/android/settings/Utils;->isIntentAvailable(Landroid/content/Context;Landroid/content/Intent;)Z
+-
+-    move-result p0
+-
+-    if-nez p0, :cond_6
+-
+-    :goto_0
+-    const/4 p0, 0x2
+-
+-    return p0
+-
+-    :cond_6
+-    const/4 p0, 0x0
+-
+-    return p0
++    .locals 0
+ 
+-    :cond_7
+-    :goto_1
+     const/4 p0, 0x3
+ 
+     return p0
+-- 
+2.53.0
+

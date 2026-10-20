@@ -1,0 +1,36 @@
+From a0d109a7ac6265a3311beb601f6cb111fa87aa35 Mon Sep 17 00:00:00 2001
+From: Devcore94 <devcore94@users.noreply.github.com>
+Date: Sat, 22 Aug 2026 01:37:49 +0200
+Subject: [PATCH] Enable Power off lock feature on QPR2
+
+---
+ .../bixby2/controller/DeviceController.smali         | 12 ++----------
+ 1 file changed, 2 insertions(+), 10 deletions(-)
+
+diff --git a/smali_classes2/com/android/systemui/bixby2/controller/DeviceController.smali b/smali_classes2/com/android/systemui/bixby2/controller/DeviceController.smali
+index 229a1d1..341778e 100644
+--- a/smali_classes2/com/android/systemui/bixby2/controller/DeviceController.smali
++++ b/smali_classes2/com/android/systemui/bixby2/controller/DeviceController.smali
+@@ -137,17 +137,9 @@
+ .end method
+ 
+ .method private isSupportPowerOffLock()Z
+-    .locals 1
+-
+-    const-string p0, "BR"
+-
+-    invoke-static {}, Landroid/os/SemSystemProperties;->getCountryIso()Ljava/lang/String;
+-
+-    move-result-object v0
+-
+-    invoke-virtual {p0, v0}, Ljava/lang/String;->equalsIgnoreCase(Ljava/lang/String;)Z
++    .locals 0
+ 
+-    move-result p0
++    const/4 p0, 0x1
+ 
+     return p0
+ .end method
+-- 
+2.53.0
+

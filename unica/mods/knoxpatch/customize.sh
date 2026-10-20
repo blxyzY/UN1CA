@@ -30,6 +30,13 @@ SMALI_PATCH "system" "system/framework/samsungkeystoreutils.jar" \
 APPLY_PATCH "system" "system/framework/services.jar" \
     "$MODPATH/services.jar/0001-Bypass-ICD-verification.patch"
 
+# Bypass Knox attestation on GAK-only devices
+if [[ "$(GET_PROP "vendor" "ro.security.keystore.keytype")" != *"sak"* ]]; then
+    SMALI_PATCH "system" "system/framework/services.jar" \
+        "smali/com/android/server/knox/dar/DarManagerService.smali" "return" \
+        'isKnoxKeyInstallable()Z' 'true'
+fi
+
 # Disable SAK in DarManagerService
 SMALI_PATCH "system" "system/framework/services.jar" \
     "smali/com/android/server/knox/dar/DarManagerService.smali" "return" \
@@ -50,8 +57,6 @@ if [ -f "$WORK_DIR/system/system/priv-app/KmxService/KmxService.apk" ]; then
     LOG "- Downloading latest Knox Matrix app"
     DOWNLOAD_FILE "$(GET_GALAXY_STORE_DOWNLOAD_URL "com.samsung.android.kmxservice")" \
         "$WORK_DIR/system/system/priv-app/KmxService/KmxService.apk"
-    APPLY_PATCH "system" "system/priv-app/KmxService/KmxService.apk" \
-        "$MODPATH/KmxService.apk/0002-Ignore-FabricEscrowVault-errors-in-KmxServiceReceiver.patch"
     SMALI_PATCH "system" "system/priv-app/KmxService/KmxService.apk" \
         "smali_classes2/com/samsung/android/kmxservice/common/util/RootOfTrust.smali" "return" \
         'getVerifiedBootState()I' '0'

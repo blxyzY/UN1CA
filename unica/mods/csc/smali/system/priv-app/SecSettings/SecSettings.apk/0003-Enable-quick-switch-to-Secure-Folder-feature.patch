@@ -1,7 +1,7 @@
-From cd9f56675bd1c394c1a07bf1c760ccef485d10cb Mon Sep 17 00:00:00 2001
-From: Salvo Giangreco <giangrecosalvo9@gmail.com>
-Date: Mon, 17 Nov 2025 00:46:42 +0100
-Subject: [PATCH] Enable quick switch to Secure Folder feature
+From 56b30d9d0212d4f76aab4a8a41faf3ff21142c66 Mon Sep 17 00:00:00 2001
+From: Devcore94 <devcore94@users.noreply.github.com>
+Date: Sat, 22 Aug 2026 01:37:18 +0200
+Subject: [PATCH] Enable quick switch to Secure Folder on QPR2
 
 ---
  .../android/settings/usefulfeature/Usefulfeature$1.smali | 9 ---------
@@ -9,7 +9,7 @@ Subject: [PATCH] Enable quick switch to Secure Folder feature
  2 files changed, 1 insertion(+), 12 deletions(-)
 
 diff --git a/smali_classes2/com/samsung/android/settings/usefulfeature/Usefulfeature$1.smali b/smali_classes2/com/samsung/android/settings/usefulfeature/Usefulfeature$1.smali
-index 979ecac3a..500a18679 100644
+index e8cbb25..2f13ad6 100644
 --- a/smali_classes2/com/samsung/android/settings/usefulfeature/Usefulfeature$1.smali
 +++ b/smali_classes2/com/samsung/android/settings/usefulfeature/Usefulfeature$1.smali
 @@ -250,14 +250,6 @@
@@ -36,20 +36,20 @@ index 979ecac3a..500a18679 100644
  
      iput-object p1, v0, Landroid/provider/SearchIndexableData;->key:Ljava/lang/String;
 diff --git a/smali_classes2/com/samsung/android/settings/usefulfeature/functionkey/FunctionKeyUtils.smali b/smali_classes2/com/samsung/android/settings/usefulfeature/functionkey/FunctionKeyUtils.smali
-index 833fde60a..0a5d87f52 100644
+index 49c7f29..9570579 100644
 --- a/smali_classes2/com/samsung/android/settings/usefulfeature/functionkey/FunctionKeyUtils.smali
 +++ b/smali_classes2/com/samsung/android/settings/usefulfeature/functionkey/FunctionKeyUtils.smali
-@@ -589,9 +589,7 @@
+@@ -723,9 +723,7 @@
  
-     invoke-virtual {v12}, Ljava/lang/Object;->getClass()Ljava/lang/Class;
+     sget v30, Lcom/samsung/android/settings/usefulfeature/functionkey/item/SecureFolderAction;->pressType:I
  
 -    invoke-static {v1, v0}, Lcom/android/settings/Utils;->hasPackage(Landroid/content/Context;Ljava/lang/String;)Z
 -
 -    move-result v0
 +    const/4 v0, 0x1
  
-     if-nez v0, :cond_6
+     if-nez v0, :cond_9
  
 -- 
-2.51.2
+2.53.0
 

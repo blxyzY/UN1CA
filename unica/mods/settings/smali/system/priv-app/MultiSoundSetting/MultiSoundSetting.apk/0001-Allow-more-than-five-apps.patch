@@ -1,14 +1,14 @@
-From 4ec501ee800e91ea20ba2bdcdc127df176d872be Mon Sep 17 00:00:00 2001
-From: Salvo Giangreco <giangrecosalvo9@gmail.com>
-Date: Sun, 26 Oct 2025 18:38:46 +0100
-Subject: [PATCH] Allow more than five apps
+From dfb9a7cc4121b68249d801a918b16bf5f6a150b5 Mon Sep 17 00:00:00 2001
+From: Devcore94 <devcore94@users.noreply.github.com>
+Date: Sat, 22 Aug 2026 08:15:03 +0200
+Subject: [PATCH] unica: mods: settings: adapt QPR2 Multi Sound limit
 
 ---
- .../fragment/SelectMultipleAppsFragment.smali | 93 ++--------------------
- 1 file changed, 8 insertions(+), 85 deletions(-)
+ .../fragment/SelectMultipleAppsFragment.smali | 91 ++-----------------
+ 1 file changed, 8 insertions(+), 83 deletions(-)
 
 diff --git a/smali_classes2/com/samsung/android/setting/multisound/view/fragment/SelectMultipleAppsFragment.smali b/smali_classes2/com/samsung/android/setting/multisound/view/fragment/SelectMultipleAppsFragment.smali
-index fab3e55..48212c7 100644
+index 06ceff4..b960b8d 100644
 --- a/smali_classes2/com/samsung/android/setting/multisound/view/fragment/SelectMultipleAppsFragment.smali
 +++ b/smali_classes2/com/samsung/android/setting/multisound/view/fragment/SelectMultipleAppsFragment.smali
 @@ -11,10 +11,6 @@
@@ -62,12 +62,10 @@ index fab3e55..48212c7 100644
      return-void
  .end method
  
-@@ -1870,48 +1833,9 @@
- 
-     :cond_1
+@@ -1872,46 +1835,9 @@
      :goto_0
--    invoke-direct {p0}, Lcom/samsung/android/setting/multisound/view/fragment/SelectMultipleAppsFragment;->saveSelectAppList()V
--
+     invoke-direct {p0}, Lcom/samsung/android/setting/multisound/view/fragment/SelectMultipleAppsFragment;->saveSelectAppList()V
+ 
 -    iget-object p1, p0, Lcom/samsung/android/setting/multisound/view/fragment/SelectMultipleAppsFragment;->mSelectedAppList:Ljava/util/ArrayList;
 -
 -    invoke-virtual {p1}, Ljava/util/ArrayList;->size()I
@@ -112,7 +110,7 @@ index fab3e55..48212c7 100644
  
      const/4 p1, 0x1
  
-@@ -1919,7 +1843,7 @@
+@@ -1919,7 +1845,7 @@
  
      iget-object p2, p0, Lcom/samsung/android/setting/multisound/view/fragment/SelectAppBase;->mFooterView:Landroid/view/View;
  
@@ -121,17 +119,12 @@ index fab3e55..48212c7 100644
  
      invoke-virtual {p2, p1}, Landroid/view/View;->setEnabled(Z)V
  
-@@ -1933,8 +1857,7 @@
- 
-     invoke-virtual {p2, p1}, Landroid/view/View;->setEnabled(Z)V
- 
+@@ -1936,3 +1862,2 @@
 -    :cond_3
 -    :goto_1
 +    :cond_2
      const-string p1, "37011"
- 
-     invoke-static {p1}, Lcom/samsung/android/setting/multisound/common/logging/SALogging;->insertEventLog(Ljava/lang/String;)V
-@@ -1945,7 +1868,7 @@
+@@ -1945,7 +1870,7 @@
  
      move-result p2
  
@@ -140,7 +133,7 @@ index fab3e55..48212c7 100644
  
      iget-object p0, p0, Lcom/samsung/android/setting/multisound/view/fragment/SelectMultipleAppsFragment;->mSelectedAppList:Ljava/util/ArrayList;
  
-@@ -1953,12 +1876,12 @@
+@@ -1953,12 +1878,12 @@
  
      move-result-object p0
  
@@ -155,7 +148,7 @@ index fab3e55..48212c7 100644
  
      invoke-interface {p0}, Ljava/util/Iterator;->next()Ljava/lang/Object;
  
-@@ -1968,9 +1891,9 @@
+@@ -1968,9 +1893,9 @@
  
      invoke-static {p1, p2}, Lcom/samsung/android/setting/multisound/common/logging/SALogging;->insertSettingStatusLog(Ljava/lang/String;Ljava/lang/String;)V
  
@@ -168,4 +161,4 @@ index fab3e55..48212c7 100644
  .end method
  
 -- 
-2.51.1
+2.53.0

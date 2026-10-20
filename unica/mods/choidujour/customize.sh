@@ -19,7 +19,7 @@ APPLY_PATCH "system" "system/priv-app/SecSettings/SecSettings.apk" \
 
 # Disable stock OTA references
 SMALI_PATCH "system" "system/priv-app/SecSettings/SecSettings.apk" \
-    "smali_classes3/com/samsung/android/settings/softwareupdate/SoftwareUpdateUtils.smali" "return" \
+    "smali_classes5/com/samsung/android/settings/softwareupdate/SoftwareUpdateUtils.smali" "return" \
     "isOTAUpgradeAllowed(Landroid/content/Context;)Z" "false"
 
 # Dynamically patch SecSettings

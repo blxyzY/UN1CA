@@ -1,22 +1,22 @@
-From 83b31e0f1d596a012c6f188fbaedc7dd20a92f0a Mon Sep 17 00:00:00 2001
-From: Salvo Giangreco <giangrecosalvo9@gmail.com>
-Date: Sat, 30 Aug 2025 01:16:25 +0200
+From cd266d213b9349339b1fd93a74ab672d4dd60d3b Mon Sep 17 00:00:00 2001
+From: Devcore94 <devcore94@users.noreply.github.com>
+Date: Sat, 22 Aug 2026 02:04:41 +0200
 Subject: [PATCH] Nuke Knox DualDAR
 
 ---
  smali/android/content/pm/UserInfo.smali       |  34 +-
- .../internal/widget/LockPatternUtils.smali    | 306 ++++--------------
- .../android/knox/SemPersonaManager.smali      | 137 ++------
+ .../internal/widget/LockPatternUtils.smali    | 290 +++---------------
+ .../android/knox/SemPersonaManager.smali      | 137 ++-------
  .../samsung/android/knox/dar/DarRune.smali    |   8 +-
  .../knox/dar/ddar/DualDarManager.smali        |  17 +-
  .../com/samsung/android/rune/CoreRune.smali   |   4 +-
- 6 files changed, 90 insertions(+), 416 deletions(-)
+ 6 files changed, 82 insertions(+), 408 deletions(-)
 
 diff --git a/smali/android/content/pm/UserInfo.smali b/smali/android/content/pm/UserInfo.smali
-index 4519122b..10f5a5b7 100644
+index 19d267a2..8af745f8 100644
 --- a/smali/android/content/pm/UserInfo.smali
 +++ b/smali/android/content/pm/UserInfo.smali
-@@ -1206,42 +1206,22 @@
+@@ -1299,42 +1299,22 @@
  .end method
  
  .method public blacklist isSuperLocked()Z
@@ -67,10 +67,10 @@ index 4519122b..10f5a5b7 100644
  
  .method public blacklist isSupervisingProfile()Z
 diff --git a/smali_classes6/com/android/internal/widget/LockPatternUtils.smali b/smali_classes6/com/android/internal/widget/LockPatternUtils.smali
-index 85ab4e7f..b1ae8edc 100644
+index 6f7f6d8b..98a06a73 100644
 --- a/smali_classes6/com/android/internal/widget/LockPatternUtils.smali
 +++ b/smali_classes6/com/android/internal/widget/LockPatternUtils.smali
-@@ -1067,38 +1067,15 @@
+@@ -1024,38 +1024,15 @@
  .end method
  
  .method private blacklist getRequestedPasswordHistoryLength(I)I
@@ -112,7 +112,7 @@ index 85ab4e7f..b1ae8edc 100644
  
      move-result p0
  
-@@ -1463,41 +1440,8 @@
+@@ -1364,41 +1341,8 @@
  .end method
  
  .method private blacklist isEnterpriseUser(I)Z
@@ -155,7 +155,7 @@ index 85ab4e7f..b1ae8edc 100644
      const/4 p0, 0x0
  
      return p0
-@@ -1999,17 +1943,8 @@
+@@ -1858,17 +1802,8 @@
  .end method
  
  .method private blacklist reportEnabledTrustAgentsChanged(I)V
@@ -174,7 +174,7 @@ index 85ab4e7f..b1ae8edc 100644
      invoke-direct {p0}, Lcom/android/internal/widget/LockPatternUtils;->getTrustManager()Landroid/app/trust/TrustManager;
  
      move-result-object p0
-@@ -2815,19 +2750,6 @@
+@@ -2626,19 +2561,6 @@
      const/4 v1, 0x0
  
      :try_start_0
@@ -194,45 +194,7 @@ index 85ab4e7f..b1ae8edc 100644
      invoke-virtual {p0}, Lcom/android/internal/widget/LockPatternUtils;->getLockSettings()Lcom/android/internal/widget/ILockSettings;
  
      move-result-object v2
-@@ -2844,31 +2766,31 @@
- 
-     invoke-static {v0, p1}, Landroid/util/Log;->w(Ljava/lang/String;Ljava/lang/String;)I
- 
--    if-nez p0, :cond_1
-+    if-nez p0, :cond_0
- 
-     return v1
- 
--    :cond_1
-+    :cond_0
-     invoke-virtual {p0}, Lcom/android/internal/widget/VerifyCredentialResponse;->isMatched()Z
-
-     move-result p1
-
--    if-eqz p1, :cond_2
-+    if-eqz p1, :cond_1
-
-     const/4 p0, 0x1
-
-     return p0
-
--    :cond_2
-+    :cond_1
-     invoke-virtual {p0}, Lcom/android/internal/widget/VerifyCredentialResponse;->hasTimeout()Z
-
-     move-result p1
-
--    if-nez p1, :cond_3
-+    if-nez p1, :cond_2
-
-     return v1
-
--    :cond_3
-+    :cond_2
-     new-instance p1, Lcom/android/internal/widget/LockPatternUtils$RequestThrottledException;
- 
-     invoke-virtual {p0}, Lcom/android/internal/widget/VerifyCredentialResponse;->getTimeout()I
-@@ -3874,19 +3796,6 @@
+@@ -3743,19 +3665,6 @@
      invoke-static {p2, v0, v1}, Lcom/samsung/android/lock/LsLog;->verifyRequest(IILjava/lang/String;)V
  
      :try_start_0
@@ -252,7 +214,7 @@ index 85ab4e7f..b1ae8edc 100644
      invoke-virtual {p0}, Lcom/android/internal/widget/LockPatternUtils;->getLockSettings()Lcom/android/internal/widget/ILockSettings;
  
      move-result-object p0
-@@ -3977,27 +3886,6 @@
+@@ -3846,27 +3755,6 @@
  .method public blacklist getRequestedMinimumPasswordLength(I)I
      .locals 1
  
@@ -280,7 +242,7 @@ index 85ab4e7f..b1ae8edc 100644
      invoke-virtual {p0}, Lcom/android/internal/widget/LockPatternUtils;->getDevicePolicyManager()Landroid/app/admin/DevicePolicyManager;
  
      move-result-object p0
-@@ -4024,31 +3912,8 @@
+@@ -3893,31 +3781,8 @@
  .end method
  
  .method public blacklist getRequestedPasswordComplexity(IZ)I
@@ -313,7 +275,7 @@ index 85ab4e7f..b1ae8edc 100644
      invoke-virtual {p0}, Lcom/android/internal/widget/LockPatternUtils;->getDevicePolicyManager()Landroid/app/admin/DevicePolicyManager;
  
      move-result-object p0
-@@ -4073,41 +3938,8 @@
+@@ -3942,41 +3807,8 @@
  .end method
  
  .method public blacklist getRequestedPasswordMetrics(IZ)Landroid/app/admin/PasswordMetrics;
@@ -356,7 +318,7 @@ index 85ab4e7f..b1ae8edc 100644
      invoke-virtual {p0}, Lcom/android/internal/widget/LockPatternUtils;->getDevicePolicyManager()Landroid/app/admin/DevicePolicyManager;
  
      move-result-object p0
-@@ -6407,21 +6239,21 @@
+@@ -6196,21 +6028,21 @@
  .end method
  
  .method public blacklist setLockCredential(Lcom/android/internal/widget/LockscreenCredential;Lcom/android/internal/widget/LockscreenCredential;IZ)Z
@@ -384,7 +346,7 @@ index 85ab4e7f..b1ae8edc 100644
  
      goto :goto_0
  
-@@ -6438,80 +6270,63 @@
+@@ -6227,80 +6059,63 @@
      :goto_0
      invoke-static {}, Landroid/os/Process;->myPid()I
  
@@ -490,7 +452,7 @@ index 85ab4e7f..b1ae8edc 100644
      invoke-virtual {p0}, Lcom/android/internal/widget/LockPatternUtils;->getLockSettings()Lcom/android/internal/widget/ILockSettings;
  
      move-result-object p4
-@@ -6522,20 +6337,22 @@
+@@ -6311,20 +6126,22 @@
      :try_end_0
      .catch Landroid/os/RemoteException; {:try_start_0 .. :try_end_0} :catch_1
  
@@ -518,7 +480,7 @@ index 85ab4e7f..b1ae8edc 100644
      const/4 p2, 0x1
  
      :try_start_1
-@@ -6547,13 +6364,13 @@
+@@ -6336,13 +6153,13 @@
  
      move-result p1
  
@@ -534,7 +496,7 @@ index 85ab4e7f..b1ae8edc 100644
      const/4 p1, 0x2
  
      :goto_1
-@@ -7156,19 +6973,6 @@
+@@ -6878,19 +6695,6 @@
      invoke-static {p2, v0, v1}, Lcom/samsung/android/lock/LsLog;->verifyRequest(IILjava/lang/String;)V
  
      :try_start_0
@@ -554,27 +516,11 @@ index 85ab4e7f..b1ae8edc 100644
      invoke-virtual {p0}, Lcom/android/internal/widget/LockPatternUtils;->getLockSettings()Lcom/android/internal/widget/ILockSettings;
  
      move-result-object p0
-@@ -7177,13 +6981,13 @@
- 
-     move-result-object p0
- 
--    if-nez p0, :cond_1
-+    if-nez p0, :cond_0
- 
-     sget-object p0, Lcom/android/internal/widget/VerifyCredentialResponse;->OTHER_ERROR:Lcom/android/internal/widget/VerifyCredentialResponse;
-     :try_end_0
-     .catch Landroid/os/RemoteException; {:try_start_0 .. :try_end_0} :catch_0
- 
--    :cond_1
-+    :cond_0
-     return-object p0
- 
-     :catch_0
 diff --git a/smali_classes6/com/samsung/android/knox/SemPersonaManager.smali b/smali_classes6/com/samsung/android/knox/SemPersonaManager.smali
-index 31adc63a..eabe83ae 100644
+index 7b956cf0..b64f00db 100644
 --- a/smali_classes6/com/samsung/android/knox/SemPersonaManager.smali
 +++ b/smali_classes6/com/samsung/android/knox/SemPersonaManager.smali
-@@ -337,7 +337,7 @@
+@@ -339,7 +339,7 @@
  
  .field public static final greylist SEC_PRODUCT_FEATURE_KNOX_SUPPORT_CONTAINER:Z = true
  
@@ -583,7 +529,7 @@ index 31adc63a..eabe83ae 100644
  
  .field public static final greylist SEC_PRODUCT_FEATURE_KNOX_SUPPORT_MDM:Z = true
  
-@@ -3296,30 +3296,13 @@
+@@ -3298,30 +3298,13 @@
  .end method
  
  .method public static whitelist isDarDualEncryptionEnabled(I)Z
@@ -616,7 +562,7 @@ index 31adc63a..eabe83ae 100644
  .end method
  
  .method public static greylist isDeviceOrProfileOwnerEnabled()Z
-@@ -3385,57 +3368,23 @@
+@@ -3387,57 +3370,23 @@
  .end method
  
  .method public static greylist isDualDARCustomCrypto(I)Z
@@ -678,7 +624,7 @@ index 31adc63a..eabe83ae 100644
  .end method
  
  .method public static greylist isExternalStorageEnabled(I)Z
-@@ -5658,37 +5607,14 @@
+@@ -5693,37 +5642,14 @@
  .end method
  
  .method public greylist getDualDARProfile()Landroid/os/Bundle;
@@ -711,7 +657,7 @@ index 31adc63a..eabe83ae 100644
 +    sget-object p0, Lcom/samsung/android/knox/SemPersonaManager;->TAG:Ljava/lang/String;
  
 -    const-string v1, "Failed talking with enterprise policy service"
-+    const-string v0, "getDualDARProfile"
++    const-string/jumbo v0, "getDualDARProfile"
  
 -    invoke-static {v0, v1, p0}, Landroid/util/Log;->w(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
 +    invoke-static {p0, v0}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
@@ -720,7 +666,7 @@ index 31adc63a..eabe83ae 100644
      const/4 p0, 0x0
  
      return-object p0
-@@ -7533,47 +7459,24 @@
+@@ -7733,47 +7659,24 @@
  .end method
  
  .method public greylist setDualDARProfile(Landroid/os/Bundle;)I
@@ -806,7 +752,7 @@ index 39e7a822..d89fc962 100644
  .field public static final blacklist KNOX_SUPPORT_DAR_WEAVER:Z = true
  
 diff --git a/smali_classes6/com/samsung/android/knox/dar/ddar/DualDarManager.smali b/smali_classes6/com/samsung/android/knox/dar/ddar/DualDarManager.smali
-index 77328d6f..12897303 100644
+index 152e321a..7c0ead55 100644
 --- a/smali_classes6/com/samsung/android/knox/dar/ddar/DualDarManager.smali
 +++ b/smali_classes6/com/samsung/android/knox/dar/ddar/DualDarManager.smali
 @@ -171,24 +171,11 @@
@@ -837,10 +783,10 @@ index 77328d6f..12897303 100644
  
  .method static synthetic blacklist lambda$isInnerAuthRequired$0(ILcom/samsung/android/knox/dar/IDarManagerService;)Ljava/lang/Boolean;
 diff --git a/smali_classes6/com/samsung/android/rune/CoreRune.smali b/smali_classes6/com/samsung/android/rune/CoreRune.smali
-index 5f48b370..3a3b422b 100644
+index ab7a45b6..5a665845 100644
 --- a/smali_classes6/com/samsung/android/rune/CoreRune.smali
 +++ b/smali_classes6/com/samsung/android/rune/CoreRune.smali
-@@ -1190,9 +1190,9 @@
+@@ -1292,9 +1292,9 @@
  
  .field public static final blacklist KNOX_SUPPORT_DAR:Z = true
  
@@ -852,5 +798,3 @@ index 5f48b370..3a3b422b 100644
  
  .field public static final blacklist KNOX_SUPPORT_DAR_SDP:Z = false
  
--- 
-2.51.1

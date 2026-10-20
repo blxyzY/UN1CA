@@ -1,15 +1,14 @@
-From 0cac816ddadb5846f5ad5e63314ceeeccac5018f Mon Sep 17 00:00:00 2001
-From: Salvo Giangreco <giangrecosalvo9@gmail.com>
-Date: Thu, 30 Oct 2025 10:50:05 +0100
-Subject: [PATCH] Nuke Knox HDM
+From 7aacdee4e495a0802681cf1b45be5a81374beff4 Mon Sep 17 00:00:00 2001
+From: Devcore94 <devcore94@users.noreply.github.com>
+Date: Sat, 22 Aug 2026 04:52:53 +0200
+Subject: [PATCH] unica: mods: deknox: adapt QPR2 HDM Settings
 
-UN1CA: this patch is not complete! Please check unica/mods/deknox/customize.sh for more info.
 ---
  .../samsung/android/knox/hdm/HdmManager.smali | 464 ++----------------
  1 file changed, 54 insertions(+), 410 deletions(-)
 
 diff --git a/smali_classes4/com/samsung/android/knox/hdm/HdmManager.smali b/smali_classes4/com/samsung/android/knox/hdm/HdmManager.smali
-index be7fe1989..52db7ceb5 100644
+index 2f799635..32dbfc23 100644
 --- a/smali_classes4/com/samsung/android/knox/hdm/HdmManager.smali
 +++ b/smali_classes4/com/samsung/android/knox/hdm/HdmManager.smali
 @@ -35,7 +35,7 @@
@@ -440,7 +439,7 @@ index be7fe1989..52db7ceb5 100644
  
 -    :cond_0
 -    const-string p0, "Fail to call removeRevocationInfo() using HDM Service on HdmManager.java"
-+    const-string/jumbo v0, "removeRevocationInfo() on HdmManager.java"
++    const-string v0, "removeRevocationInfo() on HdmManager.java"
  
 -    invoke-static {v0, p0}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;)I
 +    invoke-static {p0, v0}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
@@ -488,7 +487,7 @@ index be7fe1989..52db7ceb5 100644
  
 -    :cond_0
 -    const-string p0, "Fail to call setHdmPolicy() using HDM Service on HdmManager.java"
-+    const-string/jumbo p1, "setHdmPolicy() on HdmManager.java"
++    const-string p1, "setHdmPolicy() on HdmManager.java"
  
 -    invoke-static {v0, p0}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;)I
 +    invoke-static {p0, p1}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
@@ -533,7 +532,7 @@ index be7fe1989..52db7ceb5 100644
 +    sget-object p0, Lcom/samsung/android/knox/hdm/HdmManager;->TAG:Ljava/lang/String;
  
 -    return p0
-+    const-string/jumbo p1, "setHdmTaCmd() on HdmManager.java"
++    const-string p1, "setHdmTaCmd() on HdmManager.java"
  
 -    :cond_0
 -    const-string p0, "Fail to call setHdmTaCmd() using HDM Service on HdmManager.java"
@@ -584,7 +583,7 @@ index be7fe1989..52db7ceb5 100644
  
 -    :cond_0
 -    const-string p0, "Fail to call setSwBlock() using HDM Service on HdmManager.java"
-+    const-string/jumbo p1, "setSwBlock() on HdmManager.java"
++    const-string p1, "setSwBlock() on HdmManager.java"
  
 -    invoke-static {v0, p0}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;)I
 +    invoke-static {p0, p1}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
@@ -627,7 +626,7 @@ index be7fe1989..52db7ceb5 100644
 +    sget-object p0, Lcom/samsung/android/knox/hdm/HdmManager;->TAG:Ljava/lang/String;
  
 -    move-result-object p0
-+    const-string/jumbo p1, "syncRevocationInfo() on HdmManager.java"
++    const-string p1, "syncRevocationInfo() on HdmManager.java"
  
 -    return-object p0
 -
@@ -678,7 +677,7 @@ index be7fe1989..52db7ceb5 100644
  
 -    :cond_0
 -    const-string p0, "Fail to call syncSwBlockFromBoot() using HDM Service on HdmManager.java"
-+    const-string/jumbo v0, "syncSwBlockFromBoot() on HdmManager.java"
++    const-string v0, "syncSwBlockFromBoot() on HdmManager.java"
  
 -    invoke-static {v0, p0}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;)I
 +    invoke-static {p0, v0}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
@@ -686,4 +685,5 @@ index be7fe1989..52db7ceb5 100644
      const/4 p0, -0x1
  
 -- 
-2.51.1
+2.53.0
+

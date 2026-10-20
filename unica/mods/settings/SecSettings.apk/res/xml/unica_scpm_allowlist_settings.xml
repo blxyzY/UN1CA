@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<PreferenceScreen android:title="@string/unica_scpm_allowlist_title" settings:hierarchicalParentFragment="io.mesalabs.unica.settings.extra.ExtraSettingsFragment" settings:topLevelPreferenceKey="unica_scpm_allowlist"
-  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:settings="http://schemas.android.com/apk/res-auto">
-    <Preference android:title="@string/unica_scpm_allowlist_select_title" android:key="unica_scpm_allowlist_select" android:summary="@string/unica_scpm_allowlist_select_summary" />
-    <Preference android:title="@string/unica_scpm_allowlist_manual_title" android:key="unica_scpm_allowlist_manual" android:summary="@string/unica_scpm_allowlist_manual_summary" />
-    <Preference android:title="@string/unica_scpm_allowlist_enable_all_title" android:key="unica_scpm_allowlist_enable_all_button" android:summary="@string/unica_scpm_allowlist_enable_all_summary" />
-    <SecSwitchPreference android:title="@string/unica_scpm_region_bypass_title" android:key="unica_scpm_region_bypass_switch" android:summary="@string/unica_scpm_region_bypass_summary" />
-    <Preference android:title="@string/unica_scpm_allowlist_apply_title" android:key="unica_scpm_allowlist_apply" android:summary="@string/unica_scpm_allowlist_apply_summary" />
-</PreferenceScreen>

@@ -1,14 +1,14 @@
-From ac4e4dd434a3c1db595b258432a89ab5d0a7db2b Mon Sep 17 00:00:00 2001
-From: Salvo Giangreco <giangrecosalvo9@gmail.com>
-Date: Fri, 30 May 2025 00:25:17 +0200
-Subject: [PATCH] Force Paradigm wallpapers motion animator
+From 1f5638d37972a0c5bdb61d4efbd0a7bf752411c0 Mon Sep 17 00:00:00 2001
+From: Devcore94 <devcore94@users.noreply.github.com>
+Date: Sat, 22 Aug 2026 09:01:30 +0200
+Subject: [PATCH] Force Paradigm wallpapers motion animator on QPR2
 
 ---
- smali/com/samsung/android/wallpaper/live/infinity/c.smali | 14 +-------------
+ .../android/wallpaper/live/infinity/c.smali        | 14 +-------------
  1 file changed, 1 insertion(+), 13 deletions(-)
 
 diff --git a/smali/com/samsung/android/wallpaper/live/infinity/c.smali b/smali/com/samsung/android/wallpaper/live/infinity/c.smali
-index 021dd68..d4832a7 100644
+index d7fb862..560d792 100644
 --- a/smali/com/samsung/android/wallpaper/live/infinity/c.smali
 +++ b/smali/com/samsung/android/wallpaper/live/infinity/c.smali
 @@ -43,22 +43,10 @@
@@ -36,4 +36,5 @@ index 021dd68..d4832a7 100644
  
      return-void
 -- 
-2.51.1
+2.53.0
+

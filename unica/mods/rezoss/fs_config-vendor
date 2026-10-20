@@ -1,5 +1,0 @@
-vendor/bin/mosey_server 0 2000 755 capabilities=0x0
-vendor/etc/init/mosey.rc 0 0 644 capabilities=0x0
-vendor/etc/vintf/manifest/manifest_mosey.xml 0 0 644 capabilities=0x0
-vendor/lib64/libSecPhotoHdrEncoder.uniplugin@1.0.so 0 0 644 capabilities=0x0
-vendor/lib64/libmosey_daemon_ffi.so 0 0 644 capabilities=0x0

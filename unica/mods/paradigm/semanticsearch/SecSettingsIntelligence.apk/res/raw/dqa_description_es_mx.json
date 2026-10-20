@@ -6160,13 +6160,6 @@
     "description": "Now brief, Recomendamos contenido útil y varias tareas como sesiones informativas de acuerdo con el horario diario de un individuo.\n\n1. Ejecutar la aplicación 'Configuraciones'.\n2. Selecione el menú 'Galaxy AI'.\n3. Puede encontrar el menú 'Now Brief' aquí."
   },
   {
-    "id": "20246",
-    "key": "key_smart_suggestions_nudge",
-    "authority": "com.android.settings",
-    "title": "Now nudge",
-    "description": "Now nudge, Get suggested actions based on what's on your screen to help you get things done quickly and easily.\n\n1. Run the 'Settings' app.\n2. Select the 'Galaxy AI' menu.\n3. Here you can find the 'Now nudge' menu."
-  },
-  {
     "id": "20244",
     "key": "content_to_include",
     "authority": "com.samsung.android.smartsuggestions.briefsettings.utils.BriefSettingsSearchProvider",

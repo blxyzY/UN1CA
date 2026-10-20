@@ -1,0 +1,36 @@
+From 856053f251e64bb4caf593ff9a7daa96758b2f57 Mon Sep 17 00:00:00 2001
+From: Devcore94 <devcore94@users.noreply.github.com>
+Date: Sat, 22 Aug 2026 01:32:50 +0200
+Subject: [PATCH] Enable Power off lock feature
+
+---
+ .../globalactions/util/SystemPropertiesWrapper.smali | 12 ++----------
+ 1 file changed, 2 insertions(+), 10 deletions(-)
+
+diff --git a/smali_classes6/com/samsung/android/globalactions/util/SystemPropertiesWrapper.smali b/smali_classes6/com/samsung/android/globalactions/util/SystemPropertiesWrapper.smali
+index 6e4a724..397fbdd 100644
+--- a/smali_classes6/com/samsung/android/globalactions/util/SystemPropertiesWrapper.smali
++++ b/smali_classes6/com/samsung/android/globalactions/util/SystemPropertiesWrapper.smali
+@@ -63,17 +63,9 @@
+ .end method
+ 
+ .method public blacklist isBrazilianCountryISO()Z
+-    .locals 1
+-
+-    const-string p0, "BR"
+-
+-    invoke-static {}, Landroid/os/SemSystemProperties;->getCountryIso()Ljava/lang/String;
+-
+-    move-result-object v0
+-
+-    invoke-virtual {p0, v0}, Ljava/lang/String;->equalsIgnoreCase(Ljava/lang/String;)Z
++    .locals 0
+ 
+-    move-result p0
++    const/4 p0, 0x1
+ 
+     return p0
+ .end method
+-- 
+2.53.0
+

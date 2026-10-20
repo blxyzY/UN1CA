@@ -1,5 +1,0 @@
-/vendor/bin/mosey_server u:object_r:mosey_server_exec:s0
-/vendor/etc/init/mosey\.rc u:object_r:vendor_configs_file:s0
-/vendor/etc/vintf/manifest/manifest_mosey\.xml u:object_r:vendor_configs_file:s0
-/vendor/lib64/libSecPhotoHdrEncoder\.uniplugin@1\.0\.so u:object_r:vendor_file:s0
-/vendor/lib64/libmosey_daemon_ffi\.so u:object_r:vendor_file:s0

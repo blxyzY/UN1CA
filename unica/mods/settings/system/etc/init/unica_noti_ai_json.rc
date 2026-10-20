@@ -1,5 +1,0 @@
-on property:persist.sys.unica.noti_ai_json=true
-    setprop persist.sys.unica.scpm_allowlist.apply 1
-
-on property:persist.sys.unica.noti_ai_json=false
-    setprop persist.sys.unica.scpm_allowlist.apply 1
