@@ -45,16 +45,22 @@ jobs:
           retain: 'compiler_cmake'
 
       - name: Set up build environment
+        shell: bash
         run: |
+          set -e
           sudo apt update
           DEBIAN_FRONTEND=noninteractive sudo apt install -yq \
             attr ccache clang ffmpeg libbrotli-dev libbz2-dev \
             libgtest-dev libprotobuf-dev libunwind-dev libpcre2-dev \
             libzstd-dev linux-modules-extra-$(uname -r) lld protobuf-compiler webp \
-            build-essential g++-aarch64-linux-gnu gcc-aarch64-linux-gnu python-is-python3 python3 wget
+            build-essential g++-aarch64-linux-gnu gcc-aarch64-linux-gnu \
+            python-is-python3 python3 wget
+
           sudo modprobe erofs f2fs
+
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
           echo -n "${{ secrets.PLATFORM_KEY_PK8 }}" | base64 --decode > security/unica_platform.pk8
           echo -n "${{ secrets.PLATFORM_KEY_PEM }}" | base64 --decode > security/unica_platform.x509.pem
           echo -n "${{ secrets.OTA_KEY_PK8 }}" | base64 --decode > security/unica_ota.pk8
@@ -69,10 +75,12 @@ jobs:
 
       - name: Set up Rust toolchain
         uses: dtolnay/rust-toolchain@stable
-        
+
       - name: Build dependencies
+        shell: bash
         run: |
-          source ./buildenv.sh ${{ matrix.target }}
+          set -e
+          source ./buildenv.sh "${{ matrix.target }}"
           ./scripts/build_dependencies.sh
 
       - name: Download stock firmwares
@@ -81,11 +89,13 @@ jobs:
           timeout_minutes: 60
           max_attempts: 3
           retry_on: error
-          command: source ./buildenv.sh ${{ matrix.target }} && ./scripts/download_fw.sh
+          command: bash -e -o pipefail -c 'source ./buildenv.sh "${{ matrix.target }}" && ./scripts/download_fw.sh'
 
       - name: Extract stock firmwares
+        shell: bash
         run: |
-          source ./buildenv.sh ${{ matrix.target }}
+          set -e
+          source ./buildenv.sh "${{ matrix.target }}"
           ./scripts/extract_fw.sh
 
       - name: Add swapspace
@@ -94,19 +104,47 @@ jobs:
           swap-size-gb: 12
 
       - name: Build ROM
-        run: source ./buildenv.sh ${{ matrix.target }} && run_cmd make_rom --build-rom-zip
-
-      - name: "Pull Finished ROM"
+        shell: bash
         run: |
-          mkdir -p out
-          echo "Checking before copying to out directory"
-          ls UN1CA/out
-          cp UN1CA/out/*.zip out
+          set -e
+          source ./buildenv.sh "${{ matrix.target }}"
+          run_cmd make_rom --build-rom-zip
 
-      - name: "Upload flasheable zip to Github Artifact"
+      - name: Pull Finished ROM
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          mkdir -p out
+
+          echo "Searching for built ROM ZIP files..."
+
+          find . \
+            -path './.git' -prune -o \
+            -path './out' -prune -o \
+            -type f -name '*.zip' -print
+
+          while IFS= read -r -d '' file; do
+            cp -f "$file" out/
+          done < <(
+            find . \
+              -path './.git' -prune -o \
+              -path './out' -prune -o \
+              -type f -name '*.zip' -print0
+          )
+
+          if ! compgen -G 'out/*.zip' > /dev/null; then
+            echo "::error::No ROM ZIP found after build."
+            echo "Check the make_rom output and actual ROM output directory."
+            exit 1
+          fi
+
+          echo "ROM ZIP files ready for upload:"
+          ls -lh out/
+
+      - name: Upload flashable ZIP to GitHub Artifact
         uses: actions/upload-artifact@v7
         with:
-          path: out/UN1CA_*${{ github.event.inputs.device }}*.zip
-          archive: false
-          continue-on-error: true
-            
+          name: UN1CA-${{ matrix.target }}-ROM
+          path: out/*.zip
+          if-no-files-found: error
