@@ -28,9 +28,6 @@ REMOVE_FROM_WORK_DIR()
     fi
 }
 
-MODEL=$(echo -n "$TARGET_FIRMWARE" | cut -d "/" -f 1)
-REGION=$(echo -n "$TARGET_FIRMWARE" | cut -d "/" -f 2)
-
 #Fix system camera libs
 BLOBS_LIST="
 system/lib64/libDeepDocRectify.camera.samsung.so
@@ -55,31 +52,12 @@ do
 done
 
 echo "Add stock camera libs"
-BLOBS_LIST="
-/system/system/etc/public.libraries-camera.samsung.txt
-/system/system/lib64/libImageCropper.camera.samsung.so
-/system/system/lib64/libMyFilter.camera.samsung.so
-/system/system/lib64/libPortraitDistortionCorrection.arcsoft.so
-/system/system/lib64/libPortraitDistortionCorrectionCali.arcsoft.so
-/system/system/lib64/libhigh_dynamic_range.arcsoft.so
-/system/system/lib64/liblow_light_hdr.arcsoft.so
-/system/system/lib64/libtensorflowLite.myfilter.camera.samsung.so
-/system/system/lib64/libtensorflowlite_inference_api.myfilter.camera.samsung.so
-"
-for blob in $BLOBS_LIST
-do
-    cp -a --preserve=all "$FW_DIR/${MODEL}_${REGION}$blob" "$WORK_DIR$blob"
-done
-if ! grep -q "libtensorflowLite\.myfilter" "$WORK_DIR/configs/file_context-system"; then
-    {
-        echo "/system/lib64/libtensorflowLite\.myfilter\.camera\.samsung.so u:object_r:system_file:s0"
-        echo "/system/lib64/libtensorflowlite_inference_api\.myfilter\.camera\.samsung\.so u:object_r:system_file:s0"
-    } >> "$WORK_DIR/configs/file_context-system"
-fi
-if ! grep -q "libtensorflowLite.myfilter" "$WORK_DIR/configs/fs_config-system"; then
-    {
-        echo "system/lib64/libtensorflowLite.myfilter.camera.samsung.so 0 0 644 capabilities=0x0"
-        echo "system/lib64/libtensorflowlite_inference_api.myfilter.camera.samsung.so 0 0 644 capabilities=0x0"
-    } >> "$WORK_DIR/configs/fs_config-system"
-fi
-
+ADD_TO_WORK_DIR "$TARGET_FIRMWARE" "system" "system/etc/public.libraries-camera.samsung.txt" 0 0 644 "u:object_r:system_file:s0"
+ADD_TO_WORK_DIR "$TARGET_FIRMWARE" "system" "system/lib64/libImageCropper.camera.samsung.so" 0 0 644 "u:object_r:system_lib_file:s0"
+ADD_TO_WORK_DIR "$TARGET_FIRMWARE" "system" "system/lib64/libMyFilter.camera.samsung.so" 0 0 644 "u:object_r:system_lib_file:s0"
+ADD_TO_WORK_DIR "$TARGET_FIRMWARE" "system" "system/lib64/libPortraitDistortionCorrection.arcsoft.so" 0 0 644 "u:object_r:system_lib_file:s0"
+ADD_TO_WORK_DIR "$TARGET_FIRMWARE" "system" "system/lib64/libPortraitDistortionCorrectionCali.arcsoft.so" 0 0 644 "u:object_r:system_lib_file:s0"
+ADD_TO_WORK_DIR "$TARGET_FIRMWARE" "system" "system/lib64/libhigh_dynamic_range.arcsoft.so" 0 0 644 "u:object_r:system_lib_file:s0"
+ADD_TO_WORK_DIR "$TARGET_FIRMWARE" "system" "system/lib64/liblow_light_hdr.arcsoft.so" 0 0 644 "u:object_r:system_lib_file:s0"
+ADD_TO_WORK_DIR "$TARGET_FIRMWARE" "system" "system/lib64/libtensorflowLite.myfilter.camera.samsung.so" 0 0 644 "u:object_r:system_file:s0"
+ADD_TO_WORK_DIR "$TARGET_FIRMWARE" "system" "system/lib64/libtensorflowlite_inference_api.myfilter.camera.samsung.so" 0 0 644 "u:object_r:system_fil e:s0"
