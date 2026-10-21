@@ -98,7 +98,7 @@ jobs:
 
       - name: "Pull Finished ROM"
         run: |
-          mkdir out
+          mkdir -p out
           echo "Checking before copying to out directory"
           ls UN1CA/out
           cp UN1CA/out/*.zip out
